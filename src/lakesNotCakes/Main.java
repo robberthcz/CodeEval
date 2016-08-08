@@ -40,6 +40,7 @@ package lakesNotCakes;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.LinkedList;
 import java.util.Scanner;
 
 /**
@@ -48,24 +49,23 @@ import java.util.Scanner;
 public class Main {
 
     public Main(boolean[][] lakes){
-        boolean[][] marked = new boolean[lakes.length][lakes[0].length];
         int lakeCount = 0;
         for(int i = 0; i < lakes.length; i++){
             for(int j = 0; j < lakes[0].length; j++){
-                if(!marked[i][j] && lakes[i][j]){
+                if(lakes[i][j]){
                     lakeCount++;
-                    explore(lakes, marked, i, j);
+                    exploreNotRec(lakes, i, j);
                 }
             }
         }
         System.out.println(lakeCount);
     }
 
-    private void explore(boolean[][] lakes, boolean[][] marked, int row, int col){
-        if(!lakes[row][col] || marked[row][col])
+    private void explore(boolean[][] lakes, int row, int col){
+        if(!lakes[row][col])
             return;
         else{
-            marked[row][col] = true;
+            lakes[row][col] = false;
             for(int i = -1; i <= 1 ; i++){
                 for(int j = -1; j <= 1; j++){
                     if(i == 0 && j == 0)
@@ -74,11 +74,45 @@ public class Main {
                         continue;
                     else if(row + i >= lakes.length || col + j >= lakes[0].length)
                         continue;
-                    explore(lakes, marked, row + i, col + j);
+                    explore(lakes, row + i, col + j);
 
                 }
             }
         }
+    }
+
+    private void exploreNotRec(boolean[][] lakes, int row, int col){
+        LinkedList<Integer> rowId = new LinkedList<Integer>();
+        LinkedList<Integer> colId = new LinkedList<Integer>();
+
+        rowId.addFirst(row);
+        colId.addFirst(col);
+
+        while(!rowId.isEmpty() && !colId.isEmpty()){
+            int rowFirst = rowId.removeFirst();
+            int colFirst = colId.removeFirst();
+            //System.out.println(rowFirst);
+            //System.out.println(colFirst);
+
+            lakes[rowFirst][colFirst] = false;
+
+            for(int i = -1; i <= 1 ; i++){
+                for(int j = -1; j <= 1; j++){
+                    if(i == 0 && j == 0)
+                        continue;
+                    else if(rowFirst + i < 0 || colFirst + j < 0)
+                        continue;
+                    else if(rowFirst + i >= lakes.length || colFirst + j >= lakes[0].length)
+                        continue;
+                    if(lakes[rowFirst + i][colFirst + j]){
+                        rowId.addFirst(rowFirst + i);
+                        colId.addFirst(colFirst + j);
+                    }
+
+                }
+            }
+        }
+
     }
 
     public static void main(String[] args) throws FileNotFoundException {
