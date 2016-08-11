@@ -88,7 +88,7 @@ public class Main {
             else if(c == '.'){
                 sb.append(Character.toChars(val));
             }
-            // [[[[[[[[[[
+            // [[[[[[[[[[ ]]]]]]]]]]
             else if((c == '[' && val == 0 ) || (c == ']' && val != 0)){
                 pos = braces[pos];
             }
