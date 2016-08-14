@@ -2,93 +2,166 @@ package crimeHouse;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
 	// current min number of people in the house
 	private int count;
-	// can never drop below zero
-	// current number of masked people entered or left
-	private int enteredMaskedCount, leftMaskedCount;
-	// ids of people who entered or left without a mask
 	private HashMap<Integer, Integer> entered, left;
-	private LinkedList<Integer> enteredMaskedT, leftMaskedT;
+	private LinkedHashSet<Event> events, eventsCopy;
 
 	public Main(boolean[] enterEvent, int[] idEvent) {
-		count = 0;
-		enteredMaskedCount = 0;
-		leftMaskedCount = 0;
-
 		entered = new HashMap<Integer, Integer>();
 		left = new HashMap<Integer, Integer>();
-		enteredMaskedT = new LinkedList<Integer>();
-		leftMaskedT = new LinkedList<Integer>();
-		// for each event
-		for (int i = 0; i < enterEvent.length && enteredMaskedCount >= 0 && leftMaskedCount >= 0; i++) {
-			if (enterEvent[i]) {
-				// one more in the house
-				++count;
-				// masked person entered
-				if (idEvent[i] == 0) {
-					enteredMaskedCount++;
-					enteredMaskedT.addFirst(i);
-					continue;
-				}
-				// first check if person is not already in the house
-				// that person also could have already left after entering
-				// if already in the house and did not leave unmasked => had to be in a
-				// mask when leaving
-				if (entered.containsKey(idEvent[i]) && !left.containsKey(idEvent[i])) {
-					leftMaskedCount--;
-					if(leftMaskedT.size() == 0 || leftMaskedT.removeFirst() < entered.get(idEvent[i])){
-						leftMaskedCount = - 1;
-						break;
-					}
-				}
-				entered.remove(idEvent[i]);
-				entered.put(idEvent[i], i);
-				left.remove(idEvent[i]);
+		events = new LinkedHashSet<Event>();
+		eventsCopy = new LinkedHashSet<Event>();
+		count = 0;
 
-			} else {
-				// leaving for unmasked person counts only if he entered before
-				// that or somebody masked entered beforehand
-				// masked person leaving => always counts if possible
-				if (enteredMaskedCount > 0 || entered.containsKey(idEvent[i])
-						|| idEvent[i] == 0)
-					count = Math.max(0, --count);
-				// masked person left
-				if (idEvent[i] == 0) {
-					leftMaskedCount++;
-					leftMaskedT.addFirst(i);
-					continue;
+		for(int i = 0; i < enterEvent.length; i++){
+			events.add(new Event(idEvent[i], enterEvent[i], i));
+		}
+		eventsCopy.addAll(events);
+
+		for(Event e : events){
+			if(e.isEntering() && e.getId() != 0 && !entered.containsKey(e.getId())){
+				entered.put(e.getId(), e.getTime());
+				if(left.containsKey(e.getId())){
+					//removeEvent(new Event(e.getId(), false, left.get(e.getId())));
+					left.remove(e.getId());
 				}
-				// check if person did not already leave beforehand
-				// then check if person did not enter beforehand
-				// then person had to enter as a masked person
-				if (left.containsKey(idEvent[i]) & !entered.containsKey(idEvent[i])) {
-					enteredMaskedCount--;
-					if(enteredMaskedT.size() == 0 || enteredMaskedT.removeFirst() < left.get(idEvent[i])){
-						enteredMaskedCount = - 1;
-						break;
-					}
+			}
+			else if(e.isEntering() && e.getId() != 0){
+				Event match = findEvent(0, false, entered.get(e.getId()), e.getTime());
+				if(match == null){
+					System.out.println("CRIME TIME");
+					return;
 				}
-				left.remove(idEvent[i]);
-				left.put(idEvent[i], i);
-				entered.remove(idEvent[i]);
+				removeEvent(match);
+				removeEvent(new Event(e.getId(), true, entered.get(e.getId())));
+				entered.remove(e.getId());
+				entered.put(e.getId(), e.getTime());
 			}
 
+			if(!e.isEntering() && e.getId() != 0 && !left.containsKey(e.getId())){
+				left.put(e.getId(), e.getTime());
+				if(entered.containsKey(e.getId())){
+					removeEvent(e);
+					removeEvent(new Event(e.getId(), true, entered.get(e.getId())));
+					entered.remove(e.getId());
+				}
+			}
+			else if(!e.isEntering() && e.getId() != 0){
+				Event match = findEvent(0, true, left.get(e.getId()), e.getTime());
+				if(match == null){
+					System.out.println("CRIME TIME");
+					return;
+				}
+				removeEvent(match);
+				removeEvent(new Event(e.getId(), false, left.get(e.getId())));
+				removeEvent(e);
+				left.remove(e.getId());
+				left.put(e.getId(), e.getTime());
+			}
+		}
+		int enteredMaskedCount = 0, leftMaskedCount = 0;
+		for(Event e : eventsCopy){
+			//System.out.print("[" + e + " " + count + " " + enteredMaskedCount );
+			if(e.isEntering() && e.getId() != 0){
+				count++;
+			}
+			else if(e.isEntering() && e.getId() == 0){
+				count++;
+				enteredMaskedCount++;
+			}
+			else if(!e.entering && e.getId() != 0){
+				if(enteredMaskedCount > 0){
+					enteredMaskedCount--;
+					count = Math.max(0, --count);
+				}
+			}
+			else if(!e.entering && e.getId() == 0){
+				count = Math.max(0, --count);
+				enteredMaskedCount = Math.max(0, --enteredMaskedCount);
+			}
+		}
 
+		System.out.println(count);
+	}
+
+	private boolean removeEvent(Event e){
+		return eventsCopy.remove(e);
+	}
+
+	private Event findEvent(int id, boolean entering, int time1, int time2){
+		for(Event e : eventsCopy){
+			if(e.getId() == id && e.isEntering() == entering && e.getTime() < time2 && e.getTime() > time1){
+				return e;
+			}
+		}
+		return null;
+	}
+
+	class Event{
+		private final int id;
+		private final boolean entering;
+		private final int time;
+
+		public Event(int id, boolean entering, int time) {
+			this.id = id;
+			this.entering = entering;
+			this.time = time;
+		}
+
+		@Override
+		public String toString() {
+			if(isEntering()){
+				return "E{" + id +
+						"," + entering +
+						"," + time +
+						'}';
+			}
+			else{
+				return "L{" + id +
+						"," + entering +
+						"," + time +
+						'}';
+			}
 
 		}
-		// is it CRIME TIME?
-		if (enteredMaskedCount < 0 || leftMaskedCount < 0) {
-			System.out.println("CRIME TIME");
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+
+			Event event = (Event) o;
+
+			if (entering != event.entering) return false;
+			if (id != event.id) return false;
+			if (time != event.time) return false;
+
+			return true;
 		}
-		else
-			System.out.println(count);
+
+		@Override
+		public int hashCode() {
+			int result = id;
+			result = 31 * result + (entering ? 1 : 0);
+			result = 31 * result + time;
+			return result;
+		}
+
+		public int getId() {
+			return id;
+		}
+
+		public boolean isEntering() {
+			return entering;
+		}
+
+		public int getTime() {
+			return time;
+		}
 
 	}
 
