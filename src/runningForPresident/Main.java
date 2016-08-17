@@ -175,18 +175,18 @@ public class Main {
 
     public static void main(String[] args) throws FileNotFoundException {
         final int numOfStates, numOfIssues;
-        HashMap<String, Integer> issueToCost, issueToId;
         int[][] voteTable;
         String[] idToIssue;
+        HashMap<String, Integer> issueToCost, issueToId;
 
         Scanner textScan = new Scanner(new FileReader("test-cases/runningForPresident.txt"));
 
         numOfStates = 51;
         numOfIssues = parseNum(textScan.nextLine());
-        issueToCost = new HashMap<String, Integer>();issueToId = new HashMap<String, Integer>();
         idToIssue = new String[numOfIssues];
         // columns => states, rows => issue, last column => sums for each issue, first row => n. of votes for the state
         voteTable = new int[numOfIssues + 1][numOfStates + 1];
+        issueToCost = new HashMap<String, Integer>();issueToId = new HashMap<String, Integer>();
 
         // skip empty line
         textScan.nextLine();
