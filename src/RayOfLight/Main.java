@@ -133,7 +133,7 @@ public class Main {
 
 	public static void main(String args[]) throws FileNotFoundException {
 
-		Scanner textScan = new Scanner(new FileReader("rayOfLight.txt"));
+		Scanner textScan = new Scanner(new FileReader("test-cases/rayOfLight.txt"));
 
 		while (textScan.hasNextLine()) {
 
