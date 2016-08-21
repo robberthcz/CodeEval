@@ -41,12 +41,14 @@ public class Main {
 
     private boolean bfs(){
         int[] edgeTo = new int[2*N + 1];
+        HashSet<Integer> workersSet = new HashSet<Integer>();
         Arrays.fill(edgeTo, Integer.MIN_VALUE);
         edgeTo[0] = 0;
         LinkedList<Integer> Q = new LinkedList<Integer>();
         for(int worker : workers){
             if(pair[worker] == 0){
                 Q.add(worker);
+                workersSet.add(worker);
                 edgeTo[worker] = 0;
                 edgeTo[0] = 0;
             }
@@ -62,7 +64,9 @@ public class Main {
                     return true;
                 }
                 else if(pair[seat] != 0){
+                    if(workersSet.contains(pair[seat])) continue;
                     Q.add(pair[seat]);
+                    workersSet.add(pair[seat]);
                     edgeTo[pair[seat]] = seat;
                     edgeTo[seat] = worker;
                 }
