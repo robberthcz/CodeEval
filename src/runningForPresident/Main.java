@@ -1,75 +1,73 @@
-/*
-Running for president
-        Challenge Description:
+/**
+ Running for president
+ Challenge Description:
+ You're planning your party's campaign strategy to win the Presidency of the United States.
 
-        You're planning your party's campaign strategy to win the Presidency of the United States.
-        To win, your candidate has to navigate many controversial issues, which influence voters, such as healthcare, immigration, education, energy, independence, jobs, taxes, environment, and so on. Each of these is important, but also expensive to address.
+ To win, your candidate has to navigate many controversial issues, which influence voters, such as healthcare, immigration, education, energy, independence, jobs, taxes, environment, and so on. Each of these is important, but also expensive to address.
 
-        Because the United States presidential election is determined by states casting votes in the Electoral College, you need minimum 270 of the total 538 Electoral College votes to win.
+ Because the United States presidential election is determined by states casting votes in the Electoral College, you need minimum 270 of the total 538 Electoral College votes to win.
 
-        While not completely accurate, for this challenge we use the following criteria:
-        •States may or may not value an issue.
-        •States value each issue differently.
-        • Winning 51% of any state gives you all of that state's votes. If you have less than 51 %, you won't receive any votes.
-        Your task is to put together a winning strategy by identifying the fewest issues you must address to win 270 votes.
+ While not completely accurate, for this challenge we use the following criteria:
+ •States may or may not value an issue.
+ •States value each issue differently.
+ • Winning 51% of any state gives you all of that state's votes. If you have less than 51 %, you won't receive any votes.
 
-        Input sample:
-        Your program should accept a file as its first argument. The file content is the following:
+ Your task is to put together a winning strategy by identifying the fewest issues you must address to win 270 votes.
 
-        Social issues: 9
+ Input sample:
+ Your program should accept a file as its first argument. The file content is the following:
 
-        Healthcare: 33995797
-        Immigration: 2089699
-        Education: 37182280
-        Energy independence: 1344134
-        ...
-        Wealth inequality: 99237127
-        Increase military spending: 44066575
+ Social issues: 9
+ Healthcare: 33995797
+ Immigration: 2089699
+ Education: 37182280
+ Energy independence: 1344134
+ ...
+ Wealth inequality: 99237127
+ Increase military spending: 44066575
 
-        Mississippi
-        Votes: 6
-        Creating jobs: 1
-        Jobs: 0
-        ...
-        Increase military spending: 0
-        Education: 1
-        Energy independence: 0
+ Mississippi
+ Votes: 6
+ Creating jobs: 1
+ Jobs: 0
+ ...
+ Increase military spending: 0
+ Education: 1
+ Energy independence: 0
 
-        Oklahoma
-        Votes: 7
-        Creating jobs: 1
-        Jobs: 2
-        ...
-        Increase military spending: 0
-        Education: 1
-        Energy independence: 2
-        ...
-        Maine
-        Votes: 4
-        Creating jobs: 0
-        Jobs: 0
-        ...
-        Increase military spending: 0
-        Education: 1
-        Energy independence: 3
+ Oklahoma
+ Votes: 7
+ Creating jobs: 1
+ Jobs: 2
+ ...
+ Increase military spending: 0
+ Education: 1
+ Energy independence: 2
 
-        The first line identifies the total number of potential issues, the second—information about costs for each program, and the third — information about each state, separated by spacing. Each state has a name, number of votes, and a list of issues that you can choose in each state. Each of these issues is valued based on the number of votes it can get in each state. Remember, you must get the majority of votes in each state to win.
+ ...
 
-        Output sample:
+ Maine
+ Votes: 4
+ Creating jobs: 0
+ Jobs: 0
+ ...
+ Increase military spending: 0
+ Education: 1
+ Energy independence: 3
 
-        Print out the list of issues you want to cover in you electoral program in alphabetical order.
+ The first line identifies the total number of potential issues, the second—information about costs for each program, and the third — information about each state, separated by spacing. Each state has a name, number of votes, and a list of issues that you can choose in each state. Each of these issues is valued based on the number of votes it can get in each state. Remember, you must get the majority of votes in each state to win.
 
-        For example:
+ Output sample:
+ Print out the list of issues you want to cover in you electoral program in alphabetical order.
+ For example:
 
-        Energy independence
-        Healthcare
-        Immigration
-        Increase military spending
+ Energy independence
+ Healthcare
+ Immigration
+ Increase military spending
 
-        Remember, that your task is to create a program with the fewest number of issues. If there are several variants of program with the fewest number of issues, then you need to choose the program with minimum costs.
-*/
-
-
+ Remember, that your task is to create a program with the fewest number of issues. If there are several variants of program with the fewest number of issues, then you need to choose the program with minimum costs.
+ */
 package runningForPresident;
 
 import java.io.FileNotFoundException;

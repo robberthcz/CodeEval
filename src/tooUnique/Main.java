@@ -1,30 +1,29 @@
-/*
-        Too unique
-        Challenge Description:
+/**
+ Too unique
+ Challenge Description:
+ You are given a matrix of size N×M elements, filled with lowercase ASCII letters from ‘a’ to ‘z’. Find the max size of rectangular contiguous submatrix of unique (i.e. non repeated within a given submatrix) elements. Find all submatrices of unique elements of this size and replace their elements with asterisks ‘*’.
 
-        You are given a matrix of size N×M elements, filled with lowercase ASCII letters from ‘a’ to ‘z’. Find the max size         of rectangular contiguous submatrix of unique (i.e. non repeated within a given submatrix) elements. Find all              submatrices of unique elements of this size and replace their elements with asterisks ‘*’.
+ Input sample:
+ The first argument is a file that contains the input matrix. E.g.
+ rzqicaiiaege
+ ccwnulljybtu
+ jxtxupauwuah
+ oqikzgqrzpdq
+ vblalwdjbdwn
+ ahjeencuclbo
 
-        Input sample:
-        The first argument is a file that contains the input matrix. E.g.
-        rzqicaiiaege
-        ccwnulljybtu
-        jxtxupauwuah
-        oqikzgqrzpdq
-        vblalwdjbdwn
-        ahjeencuclbo
+ Output sample:
+ Print to stdout the result of the matrix with replaced elements, where all elements of the biggest submatrixes of unique elements are replaced with asterisks ‘*’. E.g.
+ rzqicaiiae**
+ ccwnulljyb**
+ jxtx***uwu**
+ oqik****zp**
+ vbla****bd**
+ ahje****cl**
 
-        Output sample:
-        Print to stdout the result of the matrix with replaced elements, where all elements of the biggest submatrixes of          unique elements are replaced with asterisks ‘*’. E.g.
-        rzqicaiiae**
-        ccwnulljyb**
-        jxtx***uwu**
-        oqik****zp**
-        vbla****bd**
-        ahje****cl**
-
-        Constraints:
-        1.The size of matrix in the input is 60×20 elements.
-*/
+ Constraints:
+ 1.The size of matrix in the input is 60×20 elements.
+ */
 package tooUnique;
 
 import java.io.FileNotFoundException;

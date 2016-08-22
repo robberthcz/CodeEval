@@ -1,8 +1,6 @@
-/*
-
+/**
 Brainf*ck
 Challenge Description:
-
 Looking for something utterly mind-blowing? Look no further, you hit the right place!
  This challenge is inextricably linked with Brainf*ck, the most famous esoteric programming language invented by Urban Müller. Is this the first time you hear about Brainf*ck? Find out more Brainf*ck (wiki)
 
