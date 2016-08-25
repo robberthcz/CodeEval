@@ -45,16 +45,22 @@ import java.util.Scanner;
  */
 public class Main {
 
-    public static int solve(int C, int V, LinkedList<Integer> initDenoms){
+    public static int solve(int C, long V, LinkedList<Long> initDenoms){
         int newDenomsCount = 0;
-        int curVal = 1;
+        // current value to which our denominations need to sum up to
+        long curVal = 1;
 
         while(curVal <= V){
             // new denomination needed
             if(initDenoms.size() == 0 || initDenoms.peekFirst() > curVal){
                 newDenomsCount++;
+                // with new denomination, to each of the sums already reproduce-able by existing denominations,
+                // we add the value of the new denomination and expand the set of reproduce-able sums
+                // we need all 1<= sum<= V
+                // so we increase the boundary by (value_of_new_denomination*possible_number_of_coins_of_each_denomination)
                 curVal += C * curVal;
             }
+            // use one of the initial denominations
             else{
                 curVal += C * initDenoms.removeFirst();
             }
@@ -70,10 +76,10 @@ public class Main {
             //System.out.println(line);
             String[] vals = line.split("\\|");
             int C = Integer.parseInt(vals[0].trim());
-            int V = Integer.parseInt(vals[1].trim());
-            LinkedList<Integer> initDenoms = new LinkedList<Integer>();
+            long V = Long.parseLong(vals[1].trim());
+            LinkedList<Long> initDenoms = new LinkedList<Long>();
 
-            for(String num : vals[2].trim().split(" ")) initDenoms.addLast(Integer.parseInt(num.trim()));
+            for(String num : vals[2].trim().split(" ")) initDenoms.addLast(Long.parseLong(num.trim()));
             //System.out.println("V: " + V + " C: " + C);
             //System.out.println(curDenoms.toString());
             System.out.println(solve(C, V, initDenoms));
