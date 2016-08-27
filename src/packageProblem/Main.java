@@ -65,14 +65,14 @@ public class Main {
                 continue;
             }
             Item curItem = items.get(n.level + 1);
-            Node omit = new Node(n.level + 1, n.val, n.w, n.packs);
-            Node incl = new Node(n.level + 1, n.val + curItem.val, n.w + curItem.w, n.packs | (1 << (curItem.name - 1)));
+            Node omitCurItem = new Node(n.level + 1, n.val, n.w, n.packs);
+            Node inclCurItem = new Node(n.level + 1, n.val + curItem.val, n.w + curItem.w, n.packs | (1 << (curItem.name - 1)));
 
-            double inclBound = getBound(incl);
-            double omitBound = getBound(omit);
+            double inclBound = getBound(inclCurItem);
+            double omitBound = getBound(omitCurItem);
 
-            if(omitBound > maxBest) Q.add(omit);
-            if(inclBound > maxBest && incl.w <= W) Q.addFirst(incl);
+            if(omitBound > maxBest) Q.add(omitCurItem);
+            if(inclBound > maxBest && inclCurItem.w <= W) Q.addFirst(inclCurItem);
         }
         //System.out.println(maxBest);
         if(maxNode == null){
