@@ -177,7 +177,7 @@ public class Main {
         String[] idToIssue;
         HashMap<String, Integer> issueToCost, issueToId;
 
-        Scanner textScan = new Scanner(new FileReader("test-cases/runningForPresident.txt"));
+        Scanner textScan = new Scanner(new FileReader("src/runningForPresident/input.txt"));
 
         numOfStates = 51;
         numOfIssues = parseNum(textScan.nextLine());

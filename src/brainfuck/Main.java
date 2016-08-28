@@ -113,7 +113,7 @@ public class Main {
     }
 
     public static void main(String[] args) throws FileNotFoundException {
-        Scanner textScan = new Scanner(new FileReader("test-cases/brainfuck.txt"));
+        Scanner textScan = new Scanner(new FileReader("src/brainfuck/input.txt"));
 
         while(textScan.hasNextLine()){
             String line = textScan.nextLine();

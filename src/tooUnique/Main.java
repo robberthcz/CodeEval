@@ -149,7 +149,7 @@ public class Main {
     }
 
     public static void main(String[] args) throws FileNotFoundException {
-        Scanner textScan = new Scanner(new FileReader("test-cases/tooUnique.txt"));
+        Scanner textScan = new Scanner(new FileReader("src/tooUnique/input.txt"));
         // for CodeEval input
         // int rows = 20, cols = 60;
         int rows = 6, cols = 12;

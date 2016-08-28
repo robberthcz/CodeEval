@@ -57,6 +57,7 @@ public class Main {
 
         while(Q.size() > 0){
             Node n = Q.removeFirst();
+            // leaf was reached
             if(n.level == items.size() - 1){
                 if(n.val > maxBest || (maxNode != null && n.val == maxBest && n.w < maxNode.w)){
                     maxBest = n.val;
@@ -65,12 +66,14 @@ public class Main {
                 continue;
             }
             Item curItem = items.get(n.level + 1);
+            // node with the item at the current level omitted
             Node omitCurItem = new Node(n.level + 1, n.val, n.w, n.packs);
+            // node which includes the current item
             Node inclCurItem = new Node(n.level + 1, n.val + curItem.val, n.w + curItem.w, n.packs | (1 << (curItem.name - 1)));
-
+            // bounds according to fractional knapsack problem
             double inclBound = getBound(inclCurItem);
             double omitBound = getBound(omitCurItem);
-
+            // bound solutions
             if(omitBound > maxBest) Q.add(omitCurItem);
             if(inclBound > maxBest && inclCurItem.w <= W) Q.addFirst(inclCurItem);
         }
@@ -91,6 +94,11 @@ public class Main {
         System.out.println();
     }
 
+    /**
+     *
+     * @param n
+     * @return Bound computed according to fractional knapsack problem. Best possible result which could be achieved by exploring this node all of his children
+     */
     private double getBound(Node n){
         int i = n.level + 1;
         double bound = n.val;
@@ -101,6 +109,7 @@ public class Main {
             bound += item.val;
             i++;
         }
+        // fill it up to W
         if(i < items.size() - 1) bound += ((((double) W) - w) / w)*( (double) items.get(i).val);
         return bound;
     }
@@ -123,6 +132,7 @@ public class Main {
     class Node{
         int level, val;
         double w;
+        // if bit at i-th position is 1, then i-th item was included on the path when reaching this node
         int packs;
         public Node(int level, int val, double w, int packs) {
             this.level = level;

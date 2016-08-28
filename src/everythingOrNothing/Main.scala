@@ -2,7 +2,7 @@ package everythingOrNothing
 
 object Main extends App {
   val acRightsTable: Vector[Vector[Int]] = Vector(Vector(7, 3, 0), Vector(6, 2, 4), Vector(5, 1, 5), Vector(3, 7, 1), Vector(6, 0, 2), Vector(4, 2, 6))
-  val source = scala.io.Source.fromFile("test-cases/everythingOrNothing.txt")
+  val source = scala.io.Source.fromFile("src/everythingOrNothing/input.txt")
   val lines = source.getLines.filter(_.length > 0)
   for (l <- lines) {
     //System.out.println(l)

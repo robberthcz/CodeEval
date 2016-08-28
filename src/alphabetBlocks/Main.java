@@ -47,30 +47,37 @@ public class Main {
 	private boolean found;
 
 	public Main(String word, String[] cubes) {
+		// represents chars and their frequencies of the given word
 		wordBlock = new HashMap<Character, Integer>();
 		found = false;
 
 		for (int i = 0; i < word.length(); i++)	insertPiece(word.charAt(i), wordBlock);
-
+		// parse the cubes into char arrays
 		LinkedList<char[]> cubeList = new LinkedList<char[]>();
 		for (int i = 0; i < cubes.length; i++) {
 			char[] cube = parseCube(cubes[i]);
 			if (cube != null) cubeList.add(cube);
 		}
-
 		char[][] cubesArray = new char[cubeList.size()][];
 		int id = 0;
 		for (char[] a : cubeList) cubesArray[id++] = a;
-
+		// for each letter of the first cube
 		for (int i = 0; !found && i < cubesArray[0].length; i++) {
 			HashMap<Character, Integer> map = new HashMap<Character, Integer>();
 			dfs(0, i, cubesArray, map);
 		}
-
+		// print the result
 		if (found) System.out.println("True");
 		else System.out.println("False");
 	}
 
+	/**
+	 *
+	 * @param row current cube to be explored
+	 * @param col field of current cube to be explored
+	 * @param a the cubes as char array
+	 * @param map currently formed word
+	 */
 	private void dfs(int row, int col, char[][] a,
 			HashMap<Character, Integer> map) {
 		if (found) return;
@@ -78,7 +85,7 @@ public class Main {
 			found = isMatch(map);
 			return;
 		}
-
+		// explore every letter j of current cube
 		for (int j = 0; j < a[row].length; j++) {
 			insertPiece(a[row][j], map);
 			dfs(row + 1, j, a, map);
@@ -100,9 +107,13 @@ public class Main {
 		else map.put(c, --val);
 	}
 
+	/**
+	 *
+	 * @param map
+	 * @return True if input map has appropriate chars and their frequencies that match the word to be formed
+	 */
 	private boolean isMatch(HashMap<Character, Integer> map) {
 		if (!map.keySet().containsAll(wordBlock.keySet())) return false;
-
 		for (char c : map.keySet()) {
 			int mapVal = map.get(c);
 			int wordBlockVal = wordBlock.get(c);
@@ -111,24 +122,29 @@ public class Main {
 		return true;
 	}
 
+	/**
+	 * Transforms every cube so that it only contains the letters which the word to be formed has
+	 * For instance, if the word to be formed is "MOM" and the cube is "OPMKTO", we transform the cube to "OMO"
+	 * Some cubes, which do not have any such letters, are removed
+	 * @param cube
+	 * @return
+	 */
 	private char[] parseCube(String cube) {
 		HashSet<Character> set = new HashSet<Character>();
 		for (int i = 0; i < cube.length(); i++) {
-			if (wordBlock.containsKey(cube.charAt(i)))
-				set.add(cube.charAt(i));
+			if (wordBlock.containsKey(cube.charAt(i))) set.add(cube.charAt(i));
 		}
 		if (set.size() == 0) return null;
-
 		char[] chars = new char[set.size()];
 		int id = 0;
 		for (char c : set) chars[id++] = c;
-
 		return chars;
 	}
+
 	public static void main(String args[]) throws FileNotFoundException {
 
 		Scanner textScan = new Scanner(new FileReader(
-				"test-cases/alphabetBlocks.txt"));
+				"src/alphabetBlocks/input.txt"));
 
 		while (textScan.hasNextLine()) {
 			String[] input = textScan.nextLine().split("\\|");

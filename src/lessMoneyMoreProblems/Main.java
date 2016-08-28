@@ -69,7 +69,7 @@ public class Main {
     }
 
     public static void main(String[] args) throws FileNotFoundException {
-        Scanner textScan = new Scanner(new FileReader("test-cases/lessMoneyMoreProblems.txt"));
+        Scanner textScan = new Scanner(new FileReader("src/lessMoneyMoreProblems/input.txt"));
 
         while(textScan.hasNextLine()){
             String line = textScan.nextLine();

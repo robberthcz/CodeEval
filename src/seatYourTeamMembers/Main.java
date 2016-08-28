@@ -112,7 +112,7 @@ public class Main {
     }
 
     public static void main(String[] args) throws FileNotFoundException {
-        Scanner textScan = new Scanner(new FileReader("test-cases/seatYourTeamMembers.txt"));
+        Scanner textScan = new Scanner(new FileReader("src/seatYourTeamMembers/input.txt"));
         //String exc = "";
 
         while(textScan.hasNextLine()){

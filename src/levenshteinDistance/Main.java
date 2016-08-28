@@ -203,7 +203,7 @@ public class Main {
 		LinkedHashSet<String> words = new LinkedHashSet<String>();
 		boolean dictStart = false;
 
-		Scanner textScan = new Scanner(new FileReader("test-cases/levenshteinDistance2.txt"));
+		Scanner textScan = new Scanner(new FileReader("src/levenshteinDistance/input2.txt"));
 		while(textScan.hasNextLine()){
 			String word = textScan.nextLine().trim();
 			if(word.equals("END OF INPUT")) {
