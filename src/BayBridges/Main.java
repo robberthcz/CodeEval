@@ -8,8 +8,7 @@ import java.util.PriorityQueue;
 import java.util.Scanner;
 import java.util.TreeSet;
 /**
- * 
- * 
+ * Bay Bridges
  * Challenge Description:
  * 
  * A new technological breakthrough has enabled us to build bridges that can
@@ -30,15 +29,6 @@ import java.util.TreeSet;
  * 
  * Your program should accept as its first argument a path to a filename. Input
  * example is the following
- * 
- *  1 2 3 4 5 6
- * 
- * 
- * 
- * 
- * 
- * 
- * 
  * 1: ([37.788353, -122.387695], [37.829853, -122.294312])
  * 
  * 2: ([37.429615, -122.087631], [37.487391, -122.018967])

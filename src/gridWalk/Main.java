@@ -1,4 +1,4 @@
-package GridWalk;
+package gridWalk;
 
 import java.util.HashSet;
 
