@@ -1,3 +1,22 @@
+/**
+ Closest Pair
+ Challenge Description:
+ You will be given the x/y co-ordinates of several locations. You will be laying out 1 cable between two of these locations. In order to minimise the cost, your task is to find the shortest distance between a pair of locations, so that pair can be chosen for the cable installation.
+
+ Input sample:
+ Your program should accept as its first argument a path to a filename. The input file contains several sets of input. Each set of input starts with an integer N (0<=N<=10000), which denotes the number of points in this set. The next N line contains the coordinates of N two-dimensional points. The first of the two numbers denotes the X-coordinate and the latter denotes the Y-coordinate. The input is terminated by a set whose N=0. This set should not be processed. The value of the coordinates will be less than 40000 and non-negative. eg.
+ 5
+ 0 2
+ 6 67
+ 43 71
+ 39 107
+ 189 140
+ 0
+
+ Output sample:
+ For each set of input produce a single line of output containing a floating point number (with four digits after the decimal point) which denotes the distance between the closest two points. If there is no such two points in the input whose distance is less than 10000, print the line INFINITY. eg.
+ 36.2215
+ */
 package ClosestPair;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -23,60 +42,45 @@ public class Main {
 	public Main(int N) {
 		pointsX = new Point[N];
 		inserted = 0;
-
 	}
 
 	public void addPoint(int x, int y) {
 		Point p = new Point(x, y);
 		pointsX[inserted++] = p;
-
 	}
 
 	public double ClosestPair() {
 		min = Double.POSITIVE_INFINITY;
-
 		Arrays.sort(pointsX, X_ORDER);
-
 		// pointsY will be recursively sorted according to Y eventually
 		Point pointsY[] = new Point[inserted];
-
 		// temp array for mergesorting and other stuff
 		Point temp[] = new Point[inserted];
-
-		for (int i = 0; i < inserted; i++) {
+		for (int i = 0; i < inserted; i++)
 			pointsY[i] = pointsX[i];
-			// System.out.println(pointsX[i]);
-		}
 
 		ClosestPair(pointsX, pointsY, temp, 0, pointsX.length - 1);
-
 		return best1.distanceTo(best2);
 	}
 
 	// find closest pair of points in Px[lo..hi]
 	private double ClosestPair(Point[] Px, Point[] Py, Point[] temp, int lo,
 			int hi) {
-		if (hi <= lo)
-			return Double.POSITIVE_INFINITY;
+		if (hi <= lo) return Double.POSITIVE_INFINITY;
 
 		int mid = (hi - lo) / 2 + lo;
-
 		// compute closest pair with both endpoints in left subarray or both in
 		// right subarray
 		double d1 = ClosestPair(Px, Py, temp, lo, mid);
 		double d2 = ClosestPair(Px, Py, temp, mid + 1, hi);
 
 		double dMin = Math.min(d1, d2);
-
 		// Py[lo...hi] are sorted according to y-coordinate after this
 		mergesort(Py, temp, lo, hi);
-
 		// check whether closest pair is located in different subarrays, that is
 		// with endpoints in left subarrays and right subarrays.
 		double dSplit = ClosestSplitPair(Px, Py, temp, lo, mid, hi, dMin);
-
 		return dSplit;
-
 	}
 
 	// Checks whether the closest of points are split pair, that is with
@@ -85,27 +89,22 @@ public class Main {
 			int lo, int mid, int hi, double delta) {
 
 		Point leftmost = Px[mid];
-
 		double leftInterval = leftmost.X() - delta;
 		double rightInterval = leftmost.X() + delta;
 
 		// deltaPoints counts how many points are within the required interval
 		int deltaPoints = 0;
-
 		for (int i = lo; i <= hi; i++) {
 			if (Py[i].X() > leftInterval && Py[i].X() < rightInterval) {
 				temp[deltaPoints++] = Py[i];
 			}
-
 		}
-
 		// proof of the algorithm shows that we only need to check for 7 points
 		// to
 		// the right at most for valid point
 		for (int i = 0; i < deltaPoints - 1; i++) {
 			for (int j = 0; j < 7 && (i + j + 1) < deltaPoints; j++) {
 				double dist = temp[i].distanceTo(temp[i + j + 1]);
-
 				// did we find global min?
 				if (dist < min) {
 					best1 = temp[i];
@@ -115,12 +114,10 @@ public class Main {
 				// did we find min for this recursive call?
 				if (dist < delta)
 					delta = dist;
-
 			}
 		}
 		// returns found min of this recursive call
 		return delta;
-
 	}
 	/**
 	 * Mergesorts the Py array.
@@ -142,27 +139,19 @@ public class Main {
 		int j = mid + 1;
 
 		for (int k = lo; k <= hi; k++) {
-			if (i > mid)
-				Py[k] = temp[j++];
-			else if (j > hi)
-				Py[k] = temp[i++];
-			else if (temp[i].Y() < temp[j].Y())
-				Py[k] = temp[i++];
-			else
-				Py[k] = temp[j++];
-
+			if (i > mid) Py[k] = temp[j++];
+			else if (j > hi) Py[k] = temp[i++];
+			else if (temp[i].Y() < temp[j].Y())	Py[k] = temp[i++];
+			else Py[k] = temp[j++];
 		}
-
 	}
 
 	// has to be inner due to submit-requirements
 	class Point {
 		private final int x, y;
-
 		public Point(int x, int y) {
 			this.x = x;
 			this.y = y;
-
 		}
 
 		public int X() {
@@ -187,7 +176,6 @@ public class Main {
 
 		public boolean equals(Object that) {
 			Point p = (Point) that;
-
 			return x == p.X() && y == p.Y();
 		}
 	}
@@ -199,12 +187,9 @@ public class Main {
 
 	private static class xorder implements Comparator<Point> {
 		public int compare(Point p, Point q) {
-			if (p.x < q.x)
-				return -1;
-			else if (p.x > q.x)
-				return 1;
-			else
-				return 0;
+			if (p.x < q.x) return -1;
+			else if (p.x > q.x)	return 1;
+			else return 0;
 		}
 	}
 
@@ -216,51 +201,33 @@ public class Main {
 
 	private static class yorder implements Comparator<Point> {
 		public int compare(Point p, Point q) {
-			if (p.y < q.y)
-				return -1;
-			else if (p.y > q.y)
-				return 1;
-			else
-				return 0;
+			if (p.y < q.y) return -1;
+			else if (p.y > q.y) return 1;
+			else return 0;
 		}
 	}
 
 	public static void main(String args[]) throws FileNotFoundException {
-
-		Scanner pointsScan = new Scanner(new FileReader("points.txt"));
+		Scanner pointsScan = new Scanner(new FileReader("src/ClosestPair/input.txt"));
 
 		while (pointsScan.hasNextLine()) {
 			String firstLine = pointsScan.nextLine();
-
 			int N = Integer.parseInt(firstLine);
 			// if N=0 then no more points to deal with
-			if (N == 0)
-				break;
+			if (N == 0)	break;
 
 			Main test = new Main(N);
-
 			for (int i = 0; i < N; i++) {
 				String line = pointsScan.nextLine();
 				String[] words = line.split("\\s+");
-
 				int x = Integer.parseInt(words[0]);
 				int y = Integer.parseInt(words[1]);
-
 				test.addPoint(x, y);
-
 			}
-
 			double minDistance = test.ClosestPair();
-
-			if (minDistance >= 10000)
-				System.out.println("INFINITY");
-			else {
-				System.out.format("%.4f%n", minDistance);
-
-			}
+			if (minDistance >= 10000) System.out.println("INFINITY");
+			else System.out.format("%.4f%n", minDistance);
 			// /36.2215, 1.414, 1.00, 35.1283 right answers
-
 		}
-
 	}
 }
