@@ -19,7 +19,6 @@ import java.util.TreeSet;
  * Created by Robert on 6.9.2016.
  */
 public class Main extends DefaultHandler {
-    private final double PIx = 3.141592653589793;
     private String tmpValue;
     private SimpleDateFormat sdf;
     private Placemark curPmark;
@@ -67,16 +66,16 @@ public class Main extends DefaultHandler {
         }
     }
 
-    private double toRadians(double coord){
-        return coord * PIx / 180;
+    private static double toRadians(double coord){
+        return coord * Math.PI / 180;
     }
 
     public double getDistance(Region r, Placemark p){
         int R = 6371000;
-        double pmarkLat = toRadians(p.lat);
-        double rLat = toRadians(r.lat);
-        double dLat = toRadians(r.lat - p.lat);
-        double dLon = toRadians(r.lon - p.lon);
+        double pmarkLat = p.lat;
+        double rLat = r.lat;
+        double dLat = r.lat - p.lat;
+        double dLon = r.lon - p.lon;
         double a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(pmarkLat) * Math.cos(rLat) * Math.sin(dLon/2) * Math.sin(dLon/2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
@@ -88,11 +87,9 @@ public class Main extends DefaultHandler {
 
     class Placemark implements Comparable<Placemark>{
         String name;
-        int id;
+        int id, msecs, numOfConfirms;
         double lat, lon;
         Date date;
-        int msecs;
-        int numOfConfirms;
 
         @Override
         public String toString() {
@@ -123,7 +120,7 @@ public class Main extends DefaultHandler {
         double lat, lon;
         TreeSet<Placemark> inRegion;
 
-        public Region(int d, double lat, double lon) {
+        public Region(int d, double lon, double lat) {
             this.d = d;
             this.lat = lat;
             this.lon = lon;
@@ -167,8 +164,8 @@ public class Main extends DefaultHandler {
             // filter badly formed placemarks
             if(!tmpValue.contains(" ")){
                 String[] coords = tmpValue.split(",");
-                curPmark.lat = Double.parseDouble(coords[0]);
-                curPmark.lon = Double.parseDouble(coords[1]);
+                curPmark.lon = toRadians(Double.parseDouble(coords[0]));
+                curPmark.lat = toRadians(Double.parseDouble(coords[1]));
             }
         }
 
@@ -206,7 +203,7 @@ public class Main extends DefaultHandler {
             if(line.startsWith("<")) break;
             numOfRegions++;
             String[] temp = line.split("; \\(|, |\\)");
-            regions.add(new Region(Integer.parseInt(temp[0]), Double.parseDouble(temp[1]), Double.parseDouble(temp[2])));
+            regions.add(new Region(Integer.parseInt(temp[0]), toRadians(Double.parseDouble(temp[1])), toRadians(Double.parseDouble(temp[2]))));
         }
 
         BufferedReader br = new BufferedReader(new FileReader("src/flight370/input.txt"));
