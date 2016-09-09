@@ -62,7 +62,7 @@ public class Main {
         // for CodeEval submition purposes
         String result = codeTables.toString().replaceAll("=", ": ").replaceAll(",", ";");
         result = result.substring(1, result.length() - 1);
-        System.out.println(result);
+        System.out.println(result + ";");
     }
 
     private void reconstructPath(Node n, String path, TreeMap<String,String> codeTables){
