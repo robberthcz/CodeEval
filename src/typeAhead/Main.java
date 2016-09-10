@@ -37,12 +37,15 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.text.DecimalFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
+ * This is complicated only because of the bad challenge description.
+ * N-gram - the number (N-1) determines the number of words for which the predictions need to be found, Nth word is
+ * the prediction, together they form the N-gram
  * Created by Robert on 9.9.2016.
  */
 public class Main {
+    DecimalFormat df = new DecimalFormat("0.000");
     String TEXT = "Mary had a little lamb its fleece was white as snow; \n" +
         "And everywhere that Mary went, the lamb was sure to go. \n" +
         "It followed her to school one day, which was against the rule; \n" +
@@ -56,8 +59,8 @@ public class Main {
         TEXT = TEXT.replaceAll("[^A-Za-z0-9 ]", "");
         //System.out.println(TEXT);
     }
-
-    static class Elem implements Comparable<Elem>{
+    // just for elegant sorting of results needed for submittion
+    class Elem implements Comparable<Elem>{
         String word;
         double freq;
         public Elem(String word, double freq) {
@@ -65,11 +68,13 @@ public class Main {
             this.freq = freq;
         }
         public int compareTo(Elem that){
-            if(this.freq != that.freq) return Double.compare(this.freq, that.freq);
+            String thisFreq = df.format(this.freq);
+            String thatFreq = df.format(that.freq);
+            //System.out.println(this + " vs " + that + " " + thisFreq.compareTo(thatFreq) + " " + this.word.compareTo(that.word));
+            if(!thisFreq.equals(thatFreq)) return thisFreq.compareTo(thatFreq)*(-1);
             else return this.word.compareTo(that.word);
         }
         public String toString(){
-            DecimalFormat df = new DecimalFormat("0.000");
             return word + "," + df.format(freq).toString().replace(',', '.');
         }
     }
@@ -79,16 +84,26 @@ public class Main {
         int i = 0;
         while(true){
             int id = TEXT.indexOf(ngram, i);
+            // no match found or ngram is the last word
             if(id == - 1 || (id + ngram.length()) >= TEXT.length()) break;
+            // make surch match is full word and not its substring
+            else if(TEXT.charAt(id + ngram.length()) != ' ' || (id != 0 && TEXT.charAt(id - 1) != ' ')){
+                ++i;
+                continue;
+            }
             String prefix = TEXT.substring(id + ngram.length() + 1);
-            String fstWord = prefix.substring(0, prefix.indexOf(" "));
+            // the word after ngram
+            String fstWord = prefix.substring(0, Math.min(prefix.indexOf(" "), TEXT.length()));
             list.add(fstWord);
-           // System.out.println(fstWord);
             i = id + 1;
         }
         return list;
     }
 
+    /**
+     * Print the result according to CodeEval liking
+     * @param list
+     */
     public void printResult(LinkedList<String> list){
         HashMap<String, Integer> countMap = new HashMap<String, Integer>();
         TreeSet<Elem> elemsOrd = new TreeSet<Elem>();
@@ -100,12 +115,12 @@ public class Main {
 
         for(String S : countMap.keySet())
             elemsOrd.add(new Elem(S, (double) countMap.get(S) / (double) total));
-        String toString = elemsOrd.descendingSet().toString().replaceAll(", ", ";");
+        String toString = elemsOrd.toString().replaceAll(", ", ";");
         System.out.println(toString.substring(1, toString.length() - 1));
     }
 
     public static void main(String[] args) throws FileNotFoundException {
-        Scanner textScan = new Scanner(new FileReader("src/typeAhead/input.txt"));
+        Scanner textScan = new Scanner(new FileReader("src/typeAhead/input_large.txt"));
         Main test = new Main();
 
         while(textScan.hasNextLine()){
