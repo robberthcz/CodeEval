@@ -106,19 +106,23 @@ public class Main {
         }
 
         public int compareTo(Edge that){
-            if(this.getTime() != that.getTime()) return Long.compare(this.getTime(), that.getTime());
+            if(this.getTime() != that.getTime()) return Integer.compare(this.getTime(), that.getTime());
             else if(this.from == this.to) return -1;
+            else if(that.from == that.to) return 1;
             return Integer.compare(this.agent.seniority, that.agent.seniority);
         }
 
-        public long getTime(){
-            return cost + agent.cur.getTimeInMillis() / 1000;
+        public int getTime(){
+            return cost + agent.cur.get(Calendar.HOUR)*3600 + agent.cur.get(Calendar.MINUTE)*60 + agent.cur.get
+                    (Calendar.SECOND);
         }
 
         @Override
         public String toString() {
             return "E{ " + from + " -> " + to +
                     ", " + cost +
+                    ", " + (char) agent.seniority +
+                    ", " + sdf.format(this.agent.cur.getTime()) +
                     '}';
         }
     }
@@ -128,7 +132,7 @@ public class Main {
     }
 
     public static void main(String[] args) throws FileNotFoundException, ParseException {
-        Scanner textScan = new Scanner(new FileReader("src/visitToTheHeadquarters/input_large.txt"));
+        Scanner textScan = new Scanner(new FileReader("src/visitToTheHeadquarters/input_my.txt"));
         ArrayList<Agent> agents = new ArrayList<Agent>();
         HashMap<Integer, Boolean> isRoomFree = new HashMap<Integer, Boolean>();
 
@@ -167,7 +171,6 @@ public class Main {
                     agent.edges.addLast(e1);
                     agent.edges.addLast(e2);
                     lastRoom = room;
-                    continue;
                 }
                 else if(i == 0 && !isSameFloor(room, 100)){
                     Edge e1 = new Edge(0, 1, 10, agent);
@@ -178,10 +181,9 @@ public class Main {
                     agent.edges.addLast(e2);
                     agent.edges.addLast(e3);
                     lastRoom = room;
-                    continue;
                 }
 
-                if(!isSameFloor(lastRoom, room)){
+                if(i != 0 && !isSameFloor(lastRoom, room)){
                     int nFloors = Math.abs(lastRoom / 100 - room / 100);
                     Edge e1 = new Edge(lastRoom, lastRoom / 100, 10, agent);
                     Edge e2 = new Edge(lastRoom / 100, room, nFloors*10 + 10, agent);
@@ -191,7 +193,7 @@ public class Main {
                     agent.edges.addLast(e3);
                     lastRoom = room;
                 }
-                else{
+                else if(i != 0){
                     Edge e1 = new Edge(lastRoom, room, 10, agent);
                     Edge e2 = new Edge(room, room, cost, agent);
                     agent.edges.addLast(e1);
