@@ -31,7 +31,6 @@ public class Main {
 		Arrays.sort(suffix);
 
 		String lrs = "";
-		int lrsId = 0;
 		for (int i = 0; i < suffix.length - 1; i++) {
 			String curLcp = lcp(suffix[i], suffix[i + 1]);
 			// maxOverlap handles the aaaaaa test-case
@@ -42,10 +41,9 @@ public class Main {
 				continue;
 			// current substring must be either longer than past optimum
 			// or of the same length as the past optimum and appear earlier in the test-case than the past optimum
-			else if(curLcp.length() > lrs.length() || (curLcp.length() == lrs.length() && S.indexOf(curLcp, 0) < lrsId)){
+			else if(curLcp.length() > lrs.length() || (curLcp.length() == lrs.length() && S.indexOf(curLcp, 0) < S.indexOf(lrs, 0)))
 				lrs = curLcp;
-				lrsId = S.indexOf(lrs, 0);
-			}
+
 		}
 		return lrs;
 	}
