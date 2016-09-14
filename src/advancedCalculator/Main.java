@@ -55,30 +55,63 @@ package advancedCalculator;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Created by Robert on 13.9.2016.
  */
 public class Main {
     DecimalFormat df = new DecimalFormat("0.#####");
-    private LinkedList<String> output;
-    private LinkedList<String> opStack;
+    private HashSet<String> isFunction;
+    private HashMap<String, Integer> opToPrecedence;
 
     public Main(String[] tokens){
+        this.isFunction = new HashSet<String>(){{add("sin"); add("cos"); add("sqrt"); add("tan"); add("lg"); add("ln");}};
+        this.opToPrecedence = new HashMap<String, Integer>(){{put("^", 4); put("mod", 3); put("/", 2); put("*", 2); put("+", 1); put("-", 1);}};
 
+        LinkedList<String> infix = getInfix(tokens);
+        System.out.println(infix);
 
     }
 
-    public double evalInfix(String[] output){
-        LinkedList<String> list = new LinkedList<String>();
-        for(String S : output)
-            list.addLast(S);
-        evalInfix(list, 0);
-        return Double.parseDouble(list.getFirst());
+    public LinkedList<String> getInfix(String[] tokens){
+        LinkedList<String> output = new LinkedList<String>();
+        LinkedList<String> opStack = new LinkedList<String>();
+
+        for(String T : tokens){
+            System.out.println(T);
+            //System.out.println(output);
+            //System.out.println(opStack);
+            if(isNumber(T))
+                output.addLast(T);
+            else if(T.equals(")")){
+                while(!opStack.getFirst().equals("("))
+                    output.addLast(opStack.removeFirst());
+                // remove the (
+                opStack.removeFirst();
+                if(!opStack.isEmpty() && isFunction.contains(opStack.getFirst()))
+                    output.addLast(opStack.removeFirst());
+            }
+            else if(opStack.isEmpty() || T.equals("(") || isFunction.contains(T)
+                    || !opToPrecedence.containsKey(opStack.getFirst())
+                    || ( opToPrecedence.get(T) > opToPrecedence.get(opStack.getFirst())))
+                opStack.addFirst(T);
+
+            else if(opToPrecedence.containsKey(opStack.getFirst()) && opToPrecedence.get(T) <= opToPrecedence.get(opStack.getFirst())){
+                output.addLast(opStack.removeFirst());
+                opStack.addFirst(T);
+            }
+        }
+        while(!opStack.isEmpty())
+            output.addLast(opStack.removeFirst());
+        return output;
+    }
+
+
+
+    public double evalInfix(LinkedList<String> output){
+        evalInfix(output, 0);
+        return Double.parseDouble(output.getFirst());
     }
 
     private void evalInfix(LinkedList<String> list, int id){
@@ -88,15 +121,65 @@ public class Main {
                 break;
             fstOp++;
         }
-        double fst = Double.parseDouble(list.get(fstOp - 2));
-        double snd = Double.parseDouble(list.get(fstOp - 1));
         String op = list.get(fstOp);
+        if(isFunction.contains(op)){
+            double fst = Double.parseDouble(list.get(fstOp - 1));
+            list.set(fstOp - 1, String.valueOf(getFunctionResult(op, fst)));
+            list.remove(fstOp);
+        }
+        else{
+            double fst = Double.parseDouble(list.get(fstOp - 2));
+            double snd = Double.parseDouble(list.get(fstOp - 1));
+            list.set(fstOp - 2, String.valueOf(combineValues(op, fst, snd)));
+        }
+    }
 
+    public Double getFunctionResult(String op, double val){
+        if(op.equals("sin")){
+            return Math.sin(val);
+        }
+        else if(op.equals("cos")){
+            return Math.cos(val);
+        }
+        else if(op.equals("sqrt")){
+            return Math.sqrt(val);
+        }
+        else if(op.equals("tan")){
+            return Math.tan(val);
+        }
+        else if(op.equals("ln")){
+            return Math.log(val);
+        }
+        else if(op.equals("lg")){
+            return Math.log10(val);
+        }
+        return val;
+    }
+
+    public Double combineValues(String op, double fstVal, double sndVal){
+        if(op.equals("+")){
+            return fstVal + sndVal;
+        }
+        else if(op.equals("-")){
+            return fstVal - sndVal;
+        }
+        else if(op.equals("*")){
+            return fstVal * sndVal;
+        }
+        else if(op.equals("/")){
+            return fstVal / sndVal;
+        }
+        else if(op.equals("^")){
+            return Math.pow(fstVal, sndVal);
+        }
+        return Double.MAX_VALUE;
     }
 
     private boolean isNumber(String str){
-        for (char c : str.toCharArray()){
-            if (!Character.isDigit(c) && c != '.') return false;
+        for (int i = 0; i < str.length(); i++){
+            char c = str.charAt(i);
+            if(c == '-' && i == 0 && str.length() > 1);
+            else if (!Character.isDigit(c) && c != '.') return false;
         }
         return true;
     }
@@ -109,13 +192,14 @@ public class Main {
             String expr = new String(line);
             // + and - ops already have spaces between them and the numbers
             expr = expr.replaceAll("\\*", " * ").replaceAll("/", " / ").replaceAll("\\^", " ^ ")
-                    .replaceAll("ln", " ln ").replaceAll("lg", " lg ").replaceAll("\\(", " ( ")
-                    .replaceAll("\\)", " ) ");
+                       .replaceAll("ln", " ln ").replaceAll("lg", " lg ").replaceAll("\\(", " ( ")
+                       .replaceAll("\\)", " ) ");
             expr = expr.replaceAll("  ", " ").trim();
 
             //System.out.println(line);
             String[] tokens = expr.split(" ");
             //System.out.println(Arrays.toString(tokens));
+            Main test = new Main(tokens);
         }
     }
 }
