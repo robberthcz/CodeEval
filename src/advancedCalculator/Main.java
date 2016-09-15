@@ -68,7 +68,7 @@ public class Main {
     public Main(String[] tokens){
         Arrays.toString(tokens);
         this.isFunction = new HashSet<String>(){{add("sin"); add("cos"); add("sqrt"); add("tan"); add("lg"); add
-                ("ln"); add("!"); add("abs");}};
+                ("ln"); add("!"); add("abs"); add("u");}};
         this.opToPrecedence = new HashMap<String, Integer>(){{put("^", 4); put("mod", 3); put("/", 2); put("*", 2); put("+", 1); put("-", 1);}};
 
         LinkedList<String> infix = getInfix(tokens);
@@ -131,7 +131,7 @@ public class Main {
         //System.out.println(op);
         if(isFunction.contains(op)){
             double fst = Double.parseDouble(list.get(fstOp - 1));
-            list.set(fstOp - 1, String.valueOf(getFunctionResult(op, fst)));
+            list.set(fstOp - 1, String.format("%.12f", getFunctionResult(op, fst)));
             list.remove(fstOp);
             evalInfix(list, fstOp - 1);
         }
@@ -139,7 +139,7 @@ public class Main {
             double fst = Double.parseDouble(list.get(fstOp - 2));
             double snd = Double.parseDouble(list.get(fstOp - 1));
             //System.out.println("first val: " + fst + " sec. val: " + snd + " result: " + combineValues(op, fst, snd));
-            list.set(fstOp - 2, String.valueOf(combineValues(op, fst, snd)));
+            list.set(fstOp - 2, String.format("%.12f", combineValues(op, fst, snd)));
             list.remove(fstOp - 1);
             list.remove(fstOp - 1);
             evalInfix(list, fstOp);
@@ -171,6 +171,9 @@ public class Main {
         else if(op.equals("abs")){
             return Math.abs(val);
         }
+        else if(op.equals("u")){
+            return val*(-1);
+        }
         return val;
     }
 
@@ -191,7 +194,12 @@ public class Main {
             return Math.pow(fstVal, sndVal);
         }
         else if(op.equals("mod")){
-            return fstVal % sndVal;
+            int fstInt = (int) fstVal;
+            int sndInt = (int) sndVal;
+            int res = fstInt % sndInt;
+            if(res < 0)
+                res += sndInt;
+            return (double) res;
         }
         return Double.MAX_VALUE;
     }
@@ -216,17 +224,51 @@ public class Main {
     public static void main(String[] args) throws FileNotFoundException {
         Scanner textScan = new Scanner(new FileReader("src/advancedCalculator/input_large.txt"));
 
+        HashSet<Character> isOperator = new HashSet<Character>(){{add('+'); add('-'); add('*'); add('/');}};
+
         while(textScan.hasNextLine()){
             String line = textScan.nextLine();
-            StringBuilder sb = new StringBuilder(line);
+            line = line.replaceAll("e", String.valueOf(Math.exp(1)));
+            line = line.replaceAll("Pi", String.valueOf(Math.PI));
+            //StringBuilder sb = new StringBuilder(line);
             int braceCount = 0;
             LinkedList<Integer> pipes = new LinkedList<Integer>();
+            StringBuilder sb = new StringBuilder();
+            sb.append(line.charAt(0));
+            for(int i = 1; i < line.length(); i++){
+                if(line.charAt(i) == '-'
+                        && Character.isDigit(line.charAt(i - 1)) && Character.isDigit(line.charAt(i + 1)) ){
+                    sb.append(' ');
+                    sb.append(line.charAt(i));
+                    sb.append(' ');
+                }
+                else if(line.charAt(i) == '-'
+                        && line.charAt(i - 1) == ')' && Character.isDigit(line.charAt(i + 1)) ){
+                    sb.append(' ');
+                    sb.append(line.charAt(i));
+                    sb.append(' ');
+                }
+                else if(line.charAt(i) == '-'
+                        && Character.isDigit(line.charAt(i - 1)) && line.charAt(i + 1) == '(' ){
+                    sb.append(' ');
+                    sb.append(line.charAt(i));
+                    sb.append(' ');
+                }
+                else{
+                    sb.append(line.charAt(i));
+                }
+
+            }
+
+
             for(int i = 0; i < sb.length(); i++){
                 char c = sb.charAt(i);
                 if(c == '(') braceCount++;
                 else if(c == ')') braceCount--;
                 else if(c == '|'){
-                    if(!pipes.isEmpty() && pipes.getFirst() == braceCount){
+                    if(!pipes.isEmpty() && pipes.getFirst() == braceCount
+                            && !(i > 0 && sb.charAt(i - 1) == '|' && i != sb.length() - 1)
+                            && !(i > 1 && isOperator.contains(sb.charAt(i - 2)))){
                         sb.setCharAt(i, ')');
                         pipes.removeFirst();
                     }
@@ -240,13 +282,17 @@ public class Main {
 
             String expr = new String(sb);
             // + and - ops already have spaces between them and the numbers
+            // unary minus
+            expr = expr.replaceAll("-", "u");
+            expr = expr.replaceAll(" u ", " - ");
+            expr = expr.replaceAll("u", " u ");
             expr = expr.replaceAll("\\*", " * ").replaceAll("/", " / ").replaceAll("\\^", " ^ ")
                        .replaceAll("\\|", "abs(").replaceAll("\\(", " ( ")
                        .replaceAll("\\)", " ) ").replaceAll("!", " ! ").replaceAll("Pi", " Pi ");
             expr = expr.replaceAll("  ", " ").trim();
             expr = expr.replaceAll("  ", " ").trim();
-            expr = expr.replaceAll("e", String.valueOf(Math.exp(1)));
-            expr = expr.replaceAll("Pi", String.valueOf(Math.PI));
+
+
 
             //System.out.println(line);
             String[] tokens = expr.split(" ");
