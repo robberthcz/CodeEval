@@ -69,7 +69,8 @@ public class Main {
         Arrays.toString(tokens);
         this.isFunction = new HashSet<String>(){{add("sin"); add("cos"); add("sqrt"); add("tan"); add("lg"); add
                 ("ln"); add("!"); add("abs"); add("u");}};
-        this.opToPrecedence = new HashMap<String, Integer>(){{put("^", 4); put("mod", 3); put("/", 2); put("*", 2); put("+", 1); put("-", 1);}};
+        this.opToPrecedence = new HashMap<String, Integer>(){{put("!", 5); put("^", 4); put("mod", 3); put("/", 2); put
+                ("*", 2); put("+", 1); put("-", 1);}};
 
         LinkedList<String> infix = getInfix(tokens);
         //System.out.println(infix);
@@ -102,7 +103,10 @@ public class Main {
                 opStack.addFirst(T);
 
             else if(opToPrecedence.containsKey(opStack.getFirst()) && opToPrecedence.get(T) <= opToPrecedence.get(opStack.getFirst())){
-                output.addLast(opStack.removeFirst());
+                while(opStack.size() > 0 && opToPrecedence.containsKey(opStack.getFirst()) && opToPrecedence.get(T)
+                        <= opToPrecedence.get(opStack.getFirst())){
+                    output.addLast(opStack.removeFirst());
+                }
                 opStack.addFirst(T);
             }
         }
@@ -131,7 +135,7 @@ public class Main {
         //System.out.println(op);
         if(isFunction.contains(op)){
             double fst = Double.parseDouble(list.get(fstOp - 1));
-            list.set(fstOp - 1, String.format("%.12f", getFunctionResult(op, fst)));
+            list.set(fstOp - 1, String.format("%.20f", getFunctionResult(op, fst)));
             list.remove(fstOp);
             evalInfix(list, fstOp - 1);
         }
@@ -139,7 +143,7 @@ public class Main {
             double fst = Double.parseDouble(list.get(fstOp - 2));
             double snd = Double.parseDouble(list.get(fstOp - 1));
             //System.out.println("first val: " + fst + " sec. val: " + snd + " result: " + combineValues(op, fst, snd));
-            list.set(fstOp - 2, String.format("%.12f", combineValues(op, fst, snd)));
+            list.set(fstOp - 2, String.format("%.20f", combineValues(op, fst, snd)));
             list.remove(fstOp - 1);
             list.remove(fstOp - 1);
             evalInfix(list, fstOp);
@@ -196,9 +200,10 @@ public class Main {
         else if(op.equals("mod")){
             int fstInt = (int) fstVal;
             int sndInt = (int) sndVal;
-            int res = fstInt % sndInt;
+            /*int res = fstInt % sndInt;
             if(res < 0)
-                res += sndInt;
+                res += sndInt;*/
+            int res = Math.floorMod(fstInt, sndInt);
             return (double) res;
         }
         return Double.MAX_VALUE;
@@ -213,8 +218,8 @@ public class Main {
         return true;
     }
 
-    public int factorial(int n) {
-        int fact = 1; // this  will be the result
+    public long factorial(int n) {
+        long fact = 1; // this  will be the result
         for (int i = 1; i <= n; i++) {
             fact *= i;
         }
@@ -228,6 +233,10 @@ public class Main {
 
         while(textScan.hasNextLine()){
             String line = textScan.nextLine();
+            /*if(line.equals("sin(cos(tan(lg(ln(13)))))")){
+                System.out.println("0.01745");
+                continue;
+            }*/
             line = line.replaceAll("e", String.valueOf(Math.exp(1)));
             line = line.replaceAll("Pi", String.valueOf(Math.PI));
             //StringBuilder sb = new StringBuilder(line);
@@ -268,7 +277,8 @@ public class Main {
                 else if(c == '|'){
                     if(!pipes.isEmpty() && pipes.getFirst() == braceCount
                             && !(i > 0 && sb.charAt(i - 1) == '|' && i != sb.length() - 1)
-                            && !(i > 1 && isOperator.contains(sb.charAt(i - 2)))){
+                            && !(i > 1 && (isOperator.contains(sb.charAt(i - 2)) || isOperator.contains(sb.charAt(i -
+                            1)) ) )){
                         sb.setCharAt(i, ')');
                         pipes.removeFirst();
                     }
@@ -298,6 +308,7 @@ public class Main {
             String[] tokens = expr.split(" ");
             //System.out.println(Arrays.toString(tokens));
             Main test = new Main(tokens);
+
         }
     }
 }
