@@ -1,15 +1,12 @@
 /**
  Discount Offers
  Challenge Description:
-
  Our marketing department has just negotiated a deal with several local merchants that will allow us to offer exclusive discounts on various products to our top customers every day. The catch is that we can only offer each product to one customer and we may only offer one product to each customer.
-
  Each day we will get the list of products that are eligible for these special discounts. We then have to decide which products to offer to which of our customers. Fortunately, our team of highly skilled statisticians has developed an amazing mathematical model for determining how likely a given customer is to buy an offered product by calculating what we call the "suitability score" (SS). The top-secret algorithm to calculate the SS between a customer and a product is this:
 
  1. If the number of letters in the product's name is even then the SS is the number of vowels (a, e, i, o, u, y) in the customer's name multiplied by 1.5.
  2. If the number of letters in the product's name is odd then the SS is the number of consonants in the customer's name.
  3. If the number of letters in the product's name shares any common factors (besides 1) with the number of letters in the customer's name then the SS is multiplied by 1.5.
-
  Your task is to implement a program that assigns each customer a product to be offered in a way that maximizes the combined total SS across all of the chosen offers. Note that there may be a different number of products and customers. You may include code from external libraries as long as you cite the source.
 
  Input sample:
@@ -30,23 +27,59 @@ package discountOffers;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Scanner;
 
 /**
  * Created by Robert on 23.8.2016.
  */
 public class Main {
+    private final String[] customers, products;
+    private double[][] m;
+    private HashSet<Character> vowels = new HashSet<Character>(){{ add('a'); add('e'); add('i'); add('o'); add('u');
+        add('y');}};
+
+    public Main(String[] customers, String[] products){
+        this.customers = customers;
+        this.products = products;
+        this.m = new double[customers.length][products.length];
+
+        for(int i = 0; i < customers.length; i++){
+            int numOfVows = getNumOfVowels(customers[i]);
+            for(int j = 0; j < products.length; j++){
+                if(products[j].length() % 2 == 0) m[i][j] = numOfVows * 1.5;
+                else                              m[i][j] = customers[i].length() - numOfVows;
+
+                if(gcd(customers[i].length(), products[j].length()) > 1) m[i][j] *= 1.5;
+                //System.out.println(m[i][j] + " " + customers[i] + " " + products[j]);
+            }
+        }
+
+    }
+
+    public int gcd(int p, int q) {
+        if (q == 0) return p;
+        else return gcd(q, p % q);
+    }
+
+    public int getNumOfVowels(String S){
+        int count = 0;
+        for(int i = 0; i < S.length(); i++)
+            if(vowels.contains(S.charAt(i)))
+                count++;
+        return count;
+    }
 
     public static void main(String[] args) throws FileNotFoundException {
-        Scanner textScan = new Scanner(new FileReader("test-cases/discountOffers.txt"));
+        Scanner textScan = new Scanner(new FileReader("src/discountOffers/input.txt"));
 
         while(textScan.hasNextLine()){
-            String line = textScan.nextLine();
-            String cleanedLine = line.trim().replaceAll(" ", "").replaceAll(",;[^a-zA-Z]", "").toLowerCase();
-            System.out.println(line);
-            System.out.println(cleanedLine);
-            String[] customers = cleanedLine.split(";")[0].split(",");
-            String[] products = cleanedLine.split(";")[1].split(",");
+            String line[] = textScan.nextLine().split(";");
+            String[] customers = line[0].toLowerCase().replaceAll("[^a-z,]", "").split(",");
+            String[] products = line[1].toLowerCase().replaceAll("[^a-z,]", "").split(",");
+
+            Main test = new Main(customers, products);
         }
     }
 }
