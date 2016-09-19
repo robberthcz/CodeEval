@@ -27,9 +27,7 @@ package discountOffers;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Created by Robert on 23.8.2016.
@@ -56,6 +54,38 @@ public class Main {
             }
         }
 
+    }
+
+    private void auction(LinkedList<Integer> unassignedC, HashMap<Integer, Integer> prodToCustomer, double[][] prices,
+                         double
+            eps){
+        int first = unassignedC.removeFirst();
+
+        double max = Double.MIN_VALUE;
+        int maxId = Integer.MIN_VALUE;
+        // find object for this customer with max value
+        for(int i = 0; i < m[first].length; i++){
+            double cur = (m[first][i] - prices[first][i]) - eps;
+            if(cur > max){
+                max = cur;
+                maxId = i;
+            }
+        }
+        double sndMax = Double.MIN_VALUE;
+        int sndMaxId = Integer.MIN_VALUE;
+        // find object for this customer with the second max value
+        for(int i = 0; i < m[first].length; i++){
+            double cur = (m[first][i] - prices[first][i]) - eps;
+            if(cur > sndMax && cur != max){
+                sndMax = cur;
+                sndMaxId = i;
+            }
+        }
+        double incr = max - sndMax + eps;
+        prices[first][maxId] += incr;
+        if(prodToCustomer.containsKey(maxId))
+            unassignedC.addLast(prodToCustomer.get(maxId));
+        prodToCustomer.put(maxId, first);
     }
 
     public int gcd(int p, int q) {
