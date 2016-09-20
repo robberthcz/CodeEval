@@ -54,6 +54,21 @@ public class Main {
             }
         }
 
+        LinkedList<Integer> unassignedC = new LinkedList<Integer>();
+        HashMap<Integer, Integer> prodToCustomer = new HashMap<Integer, Integer>();
+        double[][] prices = new double[customers.length][products.length];
+
+        for(int i = 0; i < customers.length; i++) unassignedC.add(i);
+
+        while(unassignedC.size() > 0) {
+            auction(unassignedC, prodToCustomer, prices, 0.00001);
+        }
+
+        int sum = 0;
+        for(int k : prodToCustomer.keySet()){
+            sum += m[prodToCustomer.get(k)][k];
+        }
+        System.out.println(sum);
     }
 
     private void auction(LinkedList<Integer> unassignedC, HashMap<Integer, Integer> prodToCustomer, double[][] prices,
@@ -82,6 +97,9 @@ public class Main {
             }
         }
         double incr = max - sndMax + eps;
+        if(maxId < 0){
+            return;
+        }
         prices[first][maxId] += incr;
         if(prodToCustomer.containsKey(maxId))
             unassignedC.addLast(prodToCustomer.get(maxId));
