@@ -193,7 +193,7 @@ public class Main {
 
             for(LineSeg lHor : lineSegsHoriz){
                 if(lHor.leftPoint.equals(ray.leftPoint) || lHor.rightPoint.equals(ray.leftPoint)
-                        || (ray.leftPoint.yCoord == lHor.leftPoint.yCoord)){
+                        || (ray.leftPoint.yCoord == lHor.leftPoint.yCoord && ray.leftPoint.xCoord >= lHor.leftPoint.xCoord && ray.leftPoint.xCoord <= lHor.rightPoint.xCoord)){
                     count = 1;
                     break;
                 }
@@ -201,21 +201,6 @@ public class Main {
 
             if(count % 2 == 0) System.out.println("Citizen");
             else               System.out.println("Prisoner");
-            /*
-            Prisoner
-            Citizen
-            Prisoner
-            Prisoner
-            Citizen
-            Citizen
-            Citizen
-            Prisoner
-            Prisoner
-            Prisoner
-            Prisoner
-            Prisoner
-            Prisoner
-             */
         }
     }
 }
