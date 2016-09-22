@@ -30,40 +30,76 @@ package prisonerOrCitizen;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Scanner;
 
 /**
+ * Source of the algorithm is http://geomalgorithms.com/a03-_inclusion.html
  * Created by Robert on 21.9.2016.
  */
 public class Main {
+    /**
+     * Implementation based on Crossing Number method. It counts the number of times a ray starting at Point P crosses the polygon boundary edges. If this number is even - point is outside, if odd - point is inside.
+     * The challenge is solved, but there is still a hole in the algorithm - the point may lie on line segment, which is not horizontal or vertical, we do not check for that.
+     * @param lineSegs
+     * @param P
+     * @return
+     */
+    public static boolean isPointInPolygon(LinkedList<LineSeg> lineSegs, Point P){
+        // any intersection must be to the right of Point p
+        Point rayEnd = new Point(Integer.MAX_VALUE, P.y);
+        LineSeg ray = new LineSeg(P, rayEnd);
 
+        int cn = 0;
 
+        for(LineSeg l : lineSegs){
+            Point leftP = l.leftPoint;
+            Point rightP = l.rightPoint;
+            // skip lines not viable for crossing
+            if(rightP.x < P.x || Math.min(leftP.y, rightP.y) > P.y)
+                continue;
+            // check endpoints
+            else if(l.isEndpoint(P))
+                return true;
+                // does it lie on vertical line
+            else if(l.isVertical() && P.x == leftP.x && P.y >= leftP.y && P.y <= rightP.y){
+                return true;
+            }
+            // does it lie on horizontal line
+            else if(l.isHorizontal() && P.y == leftP.y && P.x >= leftP.x && P.x <= rightP.x){
+                return true;
+            }
+            // skip horizontal lines for cross checking
+            else if(l.isHorizontal()){
+                continue;
+            }
+            // check intersection
+            else if(ray.intersects(l)
+                    // exclude right point of upward edge
+                    && !(l.isUpward() && P.y == rightP.y)
+                    // exclude left point of downward edge
+                    && !(!l.isUpward() && P.y == leftP.y))
+                cn++;
+        }
 
-     static class Point {
-        public final int xCoord, yCoord;
+        return cn % 2 == 1;
+    }
 
-        public Point(int xCoord, int yCoord) {
-            this.xCoord = xCoord;
-            this.yCoord = yCoord;
+    static class Point {
+        public final int x, y;
+
+        public Point(int x, int y) {
+            this.x = x;
+            this.y = y;
         }
 
         public double getX(){
-            return (double) xCoord;
+            return (double) x;
         }
 
         public double getY(){
-            return (double) yCoord;
+            return (double) y;
         }
-
-         @Override
-         public String toString() {
-             return "Point{" +
-                     "xCoord=" + xCoord +
-                     ", yCoord=" + yCoord +
-                     '}';
-         }
 
          @Override
          public boolean equals(Object o) {
@@ -72,17 +108,10 @@ public class Main {
 
              Point point = (Point) o;
 
-             if (xCoord != point.xCoord) return false;
-             if (yCoord != point.yCoord) return false;
+             if (x != point.x) return false;
+             if (y != point.y) return false;
 
              return true;
-         }
-
-         @Override
-         public int hashCode() {
-             int result = xCoord;
-             result = 31 * result + yCoord;
-             return result;
          }
      }
 
@@ -90,7 +119,7 @@ public class Main {
         final Point leftPoint, rightPoint;
 
         public LineSeg(Point p1, Point p2){
-            if(p1.xCoord <= p2.xCoord){
+            if(p1.x <= p2.x){
                 leftPoint = p1;
                 rightPoint = p2;
             }
@@ -100,12 +129,20 @@ public class Main {
             }
         }
 
+        public boolean isEndpoint(Point p){
+            return p.equals(leftPoint) || p.equals(rightPoint);
+        }
+
         public boolean isUpward(){
-            return leftPoint.yCoord <= rightPoint.yCoord;
+            return leftPoint.y <= rightPoint.y;
         }
 
         public boolean isHorizontal(){
-            return leftPoint.yCoord == rightPoint.yCoord;
+            return leftPoint.y == rightPoint.y;
+        }
+
+        public boolean isVertical(){
+            return leftPoint.x == rightPoint.x;
         }
 
         public boolean intersects(LineSeg that) {
@@ -136,71 +173,35 @@ public class Main {
             else if (ccw > 0) return 1;
             else return 0;
         }
-
-        @Override
-        public String toString() {
-            return "LineSeg{" +
-                    "leftPoint=" + leftPoint +
-                    ", rightPoint=" + rightPoint +
-                    '}';
-        }
     }
 
     public static void main(String[] args) throws FileNotFoundException {
-        Scanner textScan = new Scanner(new FileReader("src/prisonerOrCitizen/input.txt"));
+        Scanner textScan = new Scanner(new FileReader("src/prisonerOrCitizen/input_large.txt"));
 
         while(textScan.hasNextLine()){
             LinkedList<LineSeg> lineSegs = new LinkedList<>();
-            LinkedList<LineSeg> lineSegsHoriz = new LinkedList<>();
             LinkedList<Point> points = new LinkedList<>();
             String line[] = textScan.nextLine().replaceAll(",| \\|", "").split(" ");
-            //System.out.println(Arrays.toString(line));
 
             for(int i = 0; i < line.length - 2; i += 2){
                 Point p = new Point(Integer.parseInt(line[i]), Integer.parseInt(line[i + 1]));
                 points.addLast(p);
             }
-
-            LineSeg ls = new LineSeg(points.getFirst(), points.getLast());
-            if(!ls.isHorizontal()) lineSegs.add(ls);
-            //System.out.println(lineSegs.getFirst());
+            // generate line segments from points
+            LineSeg last = new LineSeg(points.getFirst(), points.getLast());
+            lineSegs.add(last);
             while(points.size() > 1){
                 Point first = points.removeFirst();
                 LineSeg l = new LineSeg(first, points.getFirst());
-                if(!l.isHorizontal()) lineSegs.add(l);
-                else                  lineSegsHoriz.add(l);
-                //System.out.println(lineSegs.getLast());
+                lineSegs.add(l);
             }
-            Point p = new Point(Integer.parseInt(line[line.length - 2]), Integer.parseInt(line[line.length - 1]));
-            Point rayEnd = new Point(Integer.MAX_VALUE, p.yCoord);
-            LineSeg ray = new LineSeg(p, rayEnd);
-            //System.out.println("\n" + ray);
+            // point source
+            Point P = new Point(Integer.parseInt(line[line.length - 2]), Integer.parseInt(line[line.length - 1]));
 
-            int count = 0;
+            boolean in = isPointInPolygon(lineSegs, P);
+            if(in) System.out.println("Prisoner");
+            else   System.out.println("Citizen");
 
-            for(LineSeg l : lineSegs){
-                if((l.leftPoint.xCoord == ray.leftPoint.xCoord
-                        && l.leftPoint.xCoord == l.rightPoint.xCoord)
-                        || l.leftPoint.equals(ray.leftPoint) || l.rightPoint.equals(ray.leftPoint)){
-                    count = 1;
-                    break;
-                }
-                else if(ray.intersects(l)
-                        && !(l.isUpward() && ray.leftPoint.yCoord == l.rightPoint.yCoord)
-                        && !(!l.isUpward() && ray.leftPoint.yCoord == l.leftPoint.yCoord))
-                    count++;
-            }
-
-            for(LineSeg lHor : lineSegsHoriz){
-                if(lHor.leftPoint.equals(ray.leftPoint) || lHor.rightPoint.equals(ray.leftPoint)
-                        || (ray.leftPoint.yCoord == lHor.leftPoint.yCoord && ray.leftPoint.xCoord >= lHor.leftPoint.xCoord && ray.leftPoint.xCoord <= lHor.rightPoint.xCoord)){
-                    count = 1;
-                    break;
-                }
-            }
-
-            if(count % 2 == 0) System.out.println("Citizen");
-            else               System.out.println("Prisoner");
         }
     }
 }
