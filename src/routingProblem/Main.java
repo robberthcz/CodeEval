@@ -72,34 +72,36 @@ public class Main {
         this.adj = adj;
         this.startHost = startHost;
         this.endHost = endHost;
+        // contains the end of every shortest path found, for retracing purposes
         LinkedList<Node> ends = new LinkedList<Node>();
         bfs(ends);
 
+        // retrace each shortest path
         LinkedList<LinkedList<Integer>> shortestPaths = new LinkedList<LinkedList<Integer>>();
         for(Node n : ends){
+            // retrace this shortest path
             LinkedList<Integer> path = new LinkedList<Integer>();
             while(n.parent != null){
                 path.addFirst(n.val);
                 n = n.parent;
             }
             path.addFirst(n.val);
-            //System.out.println(path.toString());
+            // add shortest path
             shortestPaths.add(path);
         }
-
+        // for CodeEval submittion, sort shortest paths according to their IDs
         Collections.sort(shortestPaths, new LIST_ALPHABET_ORDER());
         String toString = shortestPaths.toString();
-        // remove [ at the beginning and ] at the end from
+        // remove [ at the beginning and ] at the end
         toString = toString.substring(1, toString.length() - 1);
-        if(!toString.equals("")) System.out.println(toString);
-        else System.out.println("No connection");
-        //System.out.println(Integer.toBinaryString(getSubnetMask(23)));
-        //System.out.println(Integer.bitCount(getSubnetMask(23)));
-        //System.out.println(Integer.toBinaryString(getIpAddress("172.16.254.1")));
-        //System.out.println(Long.toBinaryString(((long) 1 << 33) - 1));
-        //System.out.println(Long.toBinaryString(((long) 1 << 33) - 1 ));
+        if(!toString.equals(""))    System.out.println(toString);
+        else                        System.out.println("No connection");
     }
 
+    /**
+     * Bread-first-search.
+     * @param ends
+     */
     public void bfs(LinkedList<Node> ends){
         int[] distTo = new int[adj.keySet().size()];
         Arrays.fill(distTo, Integer.MAX_VALUE);
@@ -112,16 +114,19 @@ public class Main {
 
         while(!Q.isEmpty()){
             Node front = Q.removeFirst();
+            // explored this host earlier
             if(distTo[front.val] < front.dist) continue;
+            // reached the end of one shortest path
             else if(front.val == endHost){
                 ends.add(front);
                 continue;
             }
-            //distTo[front.val] = Math.min(distTo[front.val], front.dist);
+            // explore each adjacent host
             for(int adjHost : adj.get(front.val)){
                 Node n = new Node(adjHost);
                 n.parent = front;
                 n.dist = front.dist + 1;
+                // add only if it lowers or is equal to min distance found so far
                 if(n.dist <= distTo[n.val]) {
                     distTo[n.val] = n.dist;
                     Q.addLast(n);
@@ -136,7 +141,7 @@ public class Main {
 
         public Node(int val){this.val = val;}
     }
-
+    // sort lists so that [1,1], [1,2], [2, 1], [2, 2]
     class LIST_ALPHABET_ORDER implements Comparator<LinkedList<Integer>>{
         @Override
         public int compare(LinkedList<Integer> l1, LinkedList<Integer> l2){
@@ -172,43 +177,44 @@ public class Main {
     }
 
     public static void main(String[] args) throws FileNotFoundException {
-        Scanner textScan = new Scanner(new FileReader("src/routingProblem/input2.txt"));
-
-        HashMap<Integer, HashSet<Integer>> idToInterface = new HashMap<Integer, HashSet<Integer>>();
-        HashMap<Integer, HashSet<Integer>> interfaceToId = new HashMap<Integer, HashSet<Integer>>();
+        Scanner textScan = new Scanner(new FileReader("src/routingProblem/input_large.txt"));
+        HashMap<Integer, HashSet<Integer>> idToSubnet = new HashMap<Integer, HashSet<Integer>>();
+        HashMap<Integer, HashSet<Integer>> subnetToId = new HashMap<Integer, HashSet<Integer>>();
+        // map representing adjacency list
         HashMap<Integer, HashSet<Integer>> adj = new HashMap<Integer, HashSet<Integer>>();
+
         String firstLine = textScan.nextLine().replaceAll("\\{|]\\}", "").replaceAll("'", "").replaceAll("\\[", "").replaceAll(" ", "");
-        //System.out.println(firstLine);
         String[] hosts = firstLine.split("],");
-        //System.out.println(Arrays.toString(hosts));
+
         for(int i = 0; i < hosts.length; i++){
-            //System.out.println(hosts[i]);
             String[] host = hosts[i].split(":");
             int hostId = Integer.parseInt(host[0]);
+            // host is turned off, no interfaces
             if(host.length < 2){
-                idToInterface.put(hostId, new HashSet<Integer>());
+                idToSubnet.put(hostId, new HashSet<Integer>());
                 continue;
             }
-            //System.out.print(hostId + ": ");
+            // parse interfaces for this host
             String[] interfaces = host[1].split(",");
-            idToInterface.put(hostId, new HashSet<Integer>());
+            // initialize new host and the subnets in which this host lies
+            idToSubnet.put(hostId, new HashSet<Integer>());
             for(String iface : interfaces){
                 String[] cidr = iface.split("/");
+                // integer represenation of subnet in which current interface and host lie
                 int subnet = getIpAddress(cidr[0]) & getSubnetMask(Integer.parseInt(cidr[1]));
-                //System.out.print(subnet + "  ");
-                idToInterface.get(hostId).add(subnet);
-
-                if(!interfaceToId.containsKey(subnet)) interfaceToId.put(subnet, new HashSet<Integer>());
-                interfaceToId.get(subnet).add(hostId);
+                // subnet to hosts, host to subnets mapping
+                idToSubnet.get(hostId).add(subnet);
+                if(!subnetToId.containsKey(subnet)) subnetToId.put(subnet, new HashSet<Integer>());
+                subnetToId.get(subnet).add(hostId);
             }
-            //System.out.println();
         }
-        for(int key : idToInterface.keySet()){
+        // generate adjacency list
+        for(int key : idToSubnet.keySet()){
             adj.put(key, new HashSet<Integer>());
-            for(int subnet : idToInterface.get(key))
-                adj.get(key).addAll(interfaceToId.get(subnet));
+            for(int subnet : idToSubnet.get(key))
+                adj.get(key).addAll(subnetToId.get(subnet));
         }
-
+        // print the shortest path for start host and end host
         while(textScan.hasNextLine()){
             String line = textScan.nextLine();
             int startHost = Integer.parseInt(line.split(" ")[0]);
