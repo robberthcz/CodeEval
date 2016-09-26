@@ -80,6 +80,18 @@ public class Main {
         return ((v13 >>> Long.numberOfTrailingZeros(v13)) & 31) == 31;
     }
 
+    public int getValueCount(int count, int pos){
+        int id = 0;
+        long countBin = (1 << count) - 1;
+        long fst4 = (1 << 4) - 1;
+
+        for(int i = 12; i >= 0; i--){
+            if((((v4 >>> (i*4)) & fst4) | countBin) == countBin) id++;
+            if(id == pos) return i;
+        }
+        return -1;
+    }
+
     public static void main(String[] args) throws FileNotFoundException {
         Scanner textScan = new Scanner(new FileReader("src/pokerHands/input.txt"));
 
