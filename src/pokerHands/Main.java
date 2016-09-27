@@ -86,7 +86,7 @@ public class Main {
         long fst4 = (1 << 4) - 1;
 
         for(int i = 12; i >= 0; i--){
-            if((((v4 >>> (i*4)) & fst4) | countBin) == countBin) id++;
+            if((((v4 >>> (i*4)) & fst4)) == countBin) id++;
             if(id == pos) return i;
         }
         return -1;
