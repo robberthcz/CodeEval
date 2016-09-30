@@ -36,14 +36,9 @@
  */
 package PeakTraffic;
 
-import sun.awt.image.ImageWatched;
-
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Created by Robert on 30.9.2016.
@@ -62,9 +57,15 @@ public class Main {
         adj.get(w).add(v);
     }
 
-    public void BronKerbosch(LinkedList<Integer> R, LinkedList<Integer> P, LinkedList<Integer> X) {
+    public LinkedList<LinkedList<Integer>> getClusters(){
+        LinkedList<LinkedList<Integer>> acc = new LinkedList<>();
+        BronKerbosch(acc, new LinkedList<Integer>(), new LinkedList<Integer>(adj.keySet()), new LinkedList<Integer>());
+        return acc;
+    }
+
+    public void BronKerbosch(LinkedList<LinkedList<Integer>> acc, LinkedList<Integer> R, LinkedList<Integer> P, LinkedList<Integer> X) {
         if (P.isEmpty() && X.isEmpty()) {
-            System.out.println(R.toString());
+            acc.add((LinkedList<Integer>) R.clone());
             return;
         }
 
@@ -74,7 +75,7 @@ public class Main {
             LinkedList<Integer> interP = getIntersection(P, v);
             LinkedList<Integer> interX = getIntersection(X, v);
 
-            BronKerbosch(R, interP, interX);
+            BronKerbosch(acc, R, interP, interX);
 
             X.addLast(v);
             R.removeLast();
@@ -91,21 +92,41 @@ public class Main {
     }
 
     public static void main(String args[]) throws FileNotFoundException {
-        Scanner textScan = new Scanner(new FileReader("src/PeakTraffic/input.txt"));
+        Scanner textScan = new Scanner(new FileReader("src/PeakTraffic/input_large.txt"));
         Main test = new Main();
         HashMap<String, Integer> unameToId = new HashMap<>();
+        HashMap<Integer, String> idToUname = new HashMap<>();
         int id = 0;
+        String email = "";
 
         while (textScan.hasNextLine()) {
             String[] line = textScan.nextLine().split("\\s+");
             String v = line[6].substring(0, line[6].indexOf("@"));
             String w = line[7].substring(0, line[7].indexOf("@"));
-            // System.out.println(v + " " + w);}
-            if (!unameToId.containsKey(v)) unameToId.put(v, id++);
-            if (!unameToId.containsKey(w)) unameToId.put(w, id++);
+            if(id == 0) email = line[6].substring(line[6].indexOf("@"));
 
+            if (!unameToId.containsKey(v)){
+                idToUname.put(id, v);
+                unameToId.put(v, id++);
+            }
+            if (!unameToId.containsKey(w)){
+                idToUname.put(id, w);
+                unameToId.put(w, id++);
+            }
             test.addUndirEdge(unameToId.get(v), unameToId.get(w));
         }
-        test.BronKerbosch(new LinkedList<Integer>(), new LinkedList<Integer>(test.adj.keySet()), new LinkedList<Integer>());
+        LinkedList<LinkedList<Integer>> clusters = test.getClusters();
+        clusters.removeIf(list -> list.size() <= 2);
+        TreeSet<String> results = new TreeSet<>();
+
+        for(LinkedList<Integer> list : clusters){
+            LinkedList<String> result = new LinkedList<String>();
+            for(int i : list) result.addLast(idToUname.get(i) + email);
+
+            Collections.sort(result);
+            String toString = result.toString();
+            results.add(toString.substring(1, toString.length() - 1));
+        }
+        for(String S : results) System.out.println(S);
     }
 }
