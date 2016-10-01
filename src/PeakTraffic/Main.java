@@ -41,7 +41,22 @@ import java.io.FileReader;
 import java.util.*;
 
 /**
- * Created by Robert on 30.9.2016.
+ * Cluster must be of size higher than 2.
+ *
+ * Important is to notice that graph resulting from the test-cases is extremely sparse, where 80% of vertices have
+ * only 1 neighbor. Such vertices can be deleted, since they cannot produce cluster of size higher than 2.
+ *
+ * More advanced versions of Bron-Kerbosch (pivoting, degeneracy ordering) algorithm did not prove to be efficient for
+ * smaller graphs (300
+ * vertices)
+ * and small clusters (3, 4, 5).
+ *
+ * Listing All Maximal Cliques in Large Sparse Real-World Graphs - Eppstein, Strash => this paper contains excellent
+ * strategy to implement the set intersections and find a pivot in a very efficient manner and with constant memory. But
+ * it would be hell to debug it, since it is very imperative solution.
+ *
+ * Linear algorithm for degeneracy ordering can be found here:
+ *
  */
 public class Main {
     private HashMap<Integer, HashSet<Integer>> adj;
@@ -57,9 +72,17 @@ public class Main {
         adj.get(w).add(v);
     }
 
+    /**
+     * Returns a list of clusters with size at least 3.
+     * @return
+     */
     public LinkedList<LinkedList<Integer>> getClusters(){
+        // remove all vertices which cannot form cluster
+        adj.keySet().removeIf(k -> adj.get(k).size() <= 1);
         LinkedList<LinkedList<Integer>> acc = new LinkedList<>();
         BronKerbosch(acc, new LinkedList<Integer>(), new LinkedList<Integer>(adj.keySet()), new LinkedList<Integer>());
+        // remove clusters of size lower than 3
+        acc.removeIf(list -> list.size() <= 2);
         return acc;
     }
 
@@ -68,11 +91,12 @@ public class Main {
             acc.add((LinkedList<Integer>) R.clone());
             return;
         }
-
         while(P.size() > 0){
             int v = P.removeFirst();
             R.addLast(v);
+            // P ∩ N(v)
             LinkedList<Integer> interP = getIntersection(P, v);
+            // X ∩ N(v)
             LinkedList<Integer> interX = getIntersection(X, v);
 
             BronKerbosch(acc, R, interP, interX);
@@ -80,9 +104,14 @@ public class Main {
             X.addLast(v);
             R.removeLast();
         }
-
     }
 
+    /**
+     * Returns intersection of vertices in the list and adjacent vertices to vertex v
+     * @param list
+     * @param v
+     * @return
+     */
     private LinkedList<Integer> getIntersection(LinkedList<Integer> list, int v) {
         LinkedList<Integer> listInterV = new LinkedList<Integer>();
         for (int i : list) {
@@ -94,9 +123,13 @@ public class Main {
     public static void main(String args[]) throws FileNotFoundException {
         Scanner textScan = new Scanner(new FileReader("src/PeakTraffic/input_large.txt"));
         Main test = new Main();
+        // username to id
         HashMap<String, Integer> unameToId = new HashMap<>();
+        // id to username
         HashMap<Integer, String> idToUname = new HashMap<>();
         int id = 0;
+        // represents email ending which all users should share
+        // this does not have to be true
         String email = "";
 
         while (textScan.hasNextLine()) {
@@ -116,17 +149,18 @@ public class Main {
             test.addUndirEdge(unameToId.get(v), unameToId.get(w));
         }
         LinkedList<LinkedList<Integer>> clusters = test.getClusters();
-        clusters.removeIf(list -> list.size() <= 2);
+        // for CodeEval submittion purposes
         TreeSet<String> results = new TreeSet<>();
-
         for(LinkedList<Integer> list : clusters){
-            LinkedList<String> result = new LinkedList<String>();
+            // string representation of this cluster
+            LinkedList<String> result = new LinkedList<>();
             for(int i : list) result.addLast(idToUname.get(i) + email);
-
+            // emails are to be sorted alphabetically
             Collections.sort(result);
             String toString = result.toString();
             results.add(toString.substring(1, toString.length() - 1));
         }
+        // string representation of each cluster is to be also sorted alphabetically, not according to size
         for(String S : results) System.out.println(S);
     }
 }
