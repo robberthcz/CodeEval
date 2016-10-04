@@ -37,10 +37,11 @@
  */
 package whereIsWifi;
 
+import sun.awt.image.ImageWatched;
+
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.LinkedList;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Created by Robert on 3.10.2016.
@@ -59,6 +60,30 @@ public class Main {
                     "x=" + x +
                     ", y=" + y +
                     '}';
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Point point = (Point) o;
+
+            if (Double.compare(point.x, x) != 0) return false;
+            if (Double.compare(point.y, y) != 0) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result;
+            long temp;
+            temp = Double.doubleToLongBits(x);
+            result = (int) (temp ^ (temp >>> 32));
+            temp = Double.doubleToLongBits(y);
+            result = 31 * result + (int) (temp ^ (temp >>> 32));
+            return result;
         }
     }
 
@@ -79,8 +104,52 @@ public class Main {
         }
     }
 
+    static class Tuple implements Comparable<Tuple>{
+        Point pos;
+        double azimuth;
+        public Tuple(Point pos, double azimuth){
+            this.pos = pos; this.azimuth = azimuth;
+        }
+
+        public int compareTo(Tuple that){
+            int aziCmp = Double.compare(this.azimuth, that.azimuth);
+            if(aziCmp != 0) return aziCmp;
+            int xCmp = Double.compare(this.pos.x, that.pos.x);
+            if(xCmp != 0) return xCmp;
+            int yCmp = Double.compare(this.pos.y, that.pos.y);
+            return yCmp;
+        }
+
+        @Override
+        public String toString() {
+            return "Tuple{" +
+                    "pos=" + pos +
+                    ", azimuth=" + azimuth +
+                    '}';
+        }
+    }
+
+    private int getQuadrant(double angle){
+        if(0 <= angle && angle <= 90) return 1;
+        else if(90 < angle && angle <= 180) return 2;
+        else if(180 < angle && angle <= 270) return 3;
+        else return 4;
+    }
+
+    public Point triangulateHotspot(Tuple t1, Tuple t2){
+
+    }
+
+    public int compareDouble(double d1, double d2){
+        double dif = d1 - d2;
+        if(dif > 0.0001) return 1;
+        else if(dif < 0.0001) return -1;
+        else return 0;
+    }
+
     public static void main(String[] args) throws FileNotFoundException {
         Scanner textScan = new Scanner(new FileReader("src/whereIsWifi/input_large.txt"));
+        HashMap<Integer, LinkedList<Tuple>> macToLog = new HashMap<>();
 
         // parse buildings
         while(textScan.hasNextLine()){
@@ -107,7 +176,15 @@ public class Main {
 
             for(int i = 1; i < radarlog.length; i++){
                 String[] macAndAngle = radarlog[i].split(";");
+                if(!macToLog.containsKey(macAndAngle[0].hashCode()))
+                    macToLog.put(macAndAngle[0].hashCode(), new LinkedList<Tuple>());
+                macToLog.get(macAndAngle[0].hashCode()).add(new Tuple(curPos, Double.parseDouble(macAndAngle[1])));
             }
         }
+        for(int key : macToLog.keySet()){
+            Collections.sort(macToLog.get(key));
+            System.out.println(macToLog.get(key));
+        }
+
     }
 }
