@@ -142,8 +142,8 @@ public class Main {
 
     public int compareDouble(double d1, double d2){
         double dif = d1 - d2;
-        if(dif > 0.0001) return 1;
-        else if(dif < 0.0001) return -1;
+        if(dif > 0.00001) return 1;
+        else if(dif < 0.00001) return -1;
         else return 0;
     }
 
