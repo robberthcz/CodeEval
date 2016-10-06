@@ -138,6 +138,8 @@ public class Main {
 
     public Point triangulateHotspot(Tuple t1, Tuple t2){
 
+
+
     }
 
     public int compareDouble(double d1, double d2){
@@ -182,9 +184,12 @@ public class Main {
             }
         }
         for(int key : macToLog.keySet()){
-            Collections.sort(macToLog.get(key));
-            System.out.println(macToLog.get(key));
+            LinkedList<Tuple> log = macToLog.get(key);
+            Collections.sort(log);
+            System.out.println(log);
+
         }
+
 
     }
 }
