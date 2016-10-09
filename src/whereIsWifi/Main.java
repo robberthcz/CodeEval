@@ -37,8 +37,6 @@
  */
 package whereIsWifi;
 
-import sun.awt.image.ImageWatched;
-
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.*;
@@ -47,6 +45,86 @@ import java.util.*;
  * Created by Robert on 3.10.2016.
  */
 public class Main {
+
+    public static boolean isPointInPolygon(LinkedList<LineSeg> lineSegs, Point P){
+        // any intersection must be to the right of Point p
+        Point rayEnd = new Point(Integer.MAX_VALUE, P.y);
+        LineSeg ray = new LineSeg(P, rayEnd);
+
+        int cn = 0;
+
+        for(LineSeg l : lineSegs){
+            Point leftP = l.leftPoint;
+            Point rightP = l.rightPoint;
+            // skip lines not viable for crossing
+            if(rightP.x < P.x || Math.min(leftP.y, rightP.y) > P.y)
+                continue;
+            // skip horizontal lines for cross checking
+            else if(l.isHorizontal()){
+                continue;
+            }
+            // check intersection
+            else if(ray.intersects(l)
+                    // exclude right point of upward edge
+                    && !(l.isUpward() && P.y == rightP.y)
+                    // exclude left point of downward edge
+                    && !(!l.isUpward() && P.y == leftP.y))
+                cn++;
+        }
+
+        return cn % 2 == 1;
+    }
+
+    static class LineSeg{
+        final Point leftPoint, rightPoint;
+
+        public LineSeg(Point p1, Point p2){
+            if(p1.x <= p2.x){
+                leftPoint = p1;
+                rightPoint = p2;
+            }
+            else{
+                leftPoint = p2;
+                rightPoint = p1;
+            }
+        }
+        public boolean isUpward(){
+            return leftPoint.y <= rightPoint.y;
+        }
+
+        public boolean isHorizontal(){
+            return compareDouble(leftPoint.y, rightPoint.y) == 0;
+        }
+
+        public boolean intersects(LineSeg that) {
+            Point a = leftPoint;
+            Point b = rightPoint;
+            Point c = that.leftPoint;
+            Point d = that.rightPoint;
+
+            if (ccw(a, c, d) == ccw(b, c, d)) return false;
+            else if (ccw(a, b, c) == ccw(a, b, d)) return false;
+            else return true;
+        }
+
+        /**
+         * This follows from Sedgewick's Point2D class from algs4. Typical CCW
+         * function from computational geometry.
+         *
+         * @param a
+         * @param b
+         * @param c
+         * @return Points a->b->c => {clockwise, collinear, counterclockwise} =
+         *         {-1, 0, 1}
+         */
+        private int ccw(Point a, Point b, Point c) {
+            double ccw = (b.x - a.x) * (c.y - a.y)
+                    - (b.y - a.y) * (c.x - a.x);
+            if (ccw < 0) return -1;
+            else if (ccw > 0) return 1;
+            else return 0;
+        }
+    }
 
     static class Point{
         double x, y;
@@ -89,18 +167,10 @@ public class Main {
 
     static class Building{
         String name;
-        LinkedList<Point> points;
+        LinkedList<LineSeg> lines;
         public Building(String name){
             this.name = name;
-            this.points = new LinkedList<>();
-        }
-
-        @Override
-        public String toString() {
-            return "Building{" +
-                    "name='" + name + '\'' +
-                    ", points=" + points.toString() +
-                    '}';
+            this.lines = new LinkedList<>();
         }
     }
 
@@ -129,20 +199,63 @@ public class Main {
         }
     }
 
-    private int getQuadrant(double angle){
-        if(0 <= angle && angle <= 90) return 1;
-        else if(90 < angle && angle <= 180) return 2;
-        else if(180 < angle && angle <= 270) return 3;
-        else return 4;
+    private static int getQuadrant(double angle){
+        int toInt = Double.valueOf(angle).intValue();
+        if(0 < toInt && toInt < 90) return 1;
+        else if(90 < toInt && toInt < 180) return 2;
+        else if(180 < toInt && toInt < 270) return 3;
+        else if(270 < toInt && toInt < 360) return 4;
+        else return -1;
     }
 
-    public Point triangulateHotspot(Tuple t1, Tuple t2){
+    public static Point triangulateHotspot(Tuple t1, Tuple t2){
+        int q1 = getQuadrant(t1.azimuth);
+        int q2 = getQuadrant(t2.azimuth);
+        // second point is either 0, 90, 180, 270 => tan could be 0
+        if(q2 == -1) return null;
+        
+        double i = 1D, k = 1D;
+        double theta1 = 0D, theta2 = 0D;
+        if(q1 == 1){
+            theta1 = t1.azimuth;
+        }
+        else if(q1 == 2){
+            theta1 = 180D - t1.azimuth;
+            i = -1D;
+        }
+        else if(q1 == 3){
+            theta1 = t1.azimuth - 180D;
+        }
+        else if(q1 == 4){
+            theta1 = 360D - t1.azimuth;
+            i = -1D;
+        }
 
+        if(q2 == 1){
+            theta2 = t2.azimuth;
+        }
+        else if(q2 == 2){
+            theta2 = 180D - t2.azimuth;
+            k = -1D;
+        }
+        else if(q2 == 3){
+            theta2 = t2.azimuth - 180D;
+        }
+        else if(q2 == 4){
+            theta2 = 360D - t2.azimuth;
+            k = -1D;
+        }
 
+        double m = i * Math.tan(Math.toRadians(theta1));
+        double n = k / Math.tan(Math.toRadians(theta2));
 
+        double c2 = (t2.pos.y - n * m * t1.pos.y + n * t1.pos.x - n  * t2.pos.x) / (1 - n * m);
+        double c1 = m * (c2 - t1.pos.y) + t1.pos.x;
+
+        return new Point(c1, c2);
     }
 
-    public int compareDouble(double d1, double d2){
+    public static int compareDouble(double d1, double d2){
         double dif = d1 - d2;
         if(dif > 0.00001) return 1;
         else if(dif < 0.00001) return -1;
@@ -152,6 +265,7 @@ public class Main {
     public static void main(String[] args) throws FileNotFoundException {
         Scanner textScan = new Scanner(new FileReader("src/whereIsWifi/input_large.txt"));
         HashMap<Integer, LinkedList<Tuple>> macToLog = new HashMap<>();
+        LinkedList<Building> buildings = new LinkedList<>();
 
         // parse buildings
         while(textScan.hasNextLine()){
@@ -161,12 +275,19 @@ public class Main {
 
             String nameAndCoords[] = line.split(" ");
             Building b = new Building(nameAndCoords[0]);
+            Point[] points = new Point[nameAndCoords.length - 1];
 
             for(int i = 1; i < nameAndCoords.length; i++){
                 String[] coord = nameAndCoords[i].split(";");
-                b.points.add(new Point(Double.parseDouble(coord[0]), Double.parseDouble(coord[1])));
+                points[i - 1] = new Point(Double.parseDouble(coord[0]), Double.parseDouble(coord[1]));
             }
-            System.out.println(b);
+
+            for(int i = 0; i < points.length - 1; i++){
+                b.lines.add(new LineSeg(points[i], points[i + 1]));
+            }
+            buildings.add(b);
+
+                        //System.out.println(b);
         }
 
         // Wi-Fi radar log
@@ -183,13 +304,24 @@ public class Main {
                 macToLog.get(macAndAngle[0].hashCode()).add(new Tuple(curPos, Double.parseDouble(macAndAngle[1])));
             }
         }
+        TreeSet<String> buildsWithHotspots = new TreeSet<>();
         for(int key : macToLog.keySet()){
             LinkedList<Tuple> log = macToLog.get(key);
-            Collections.sort(log);
-            System.out.println(log);
+            //Collections.sort(log);
+            //System.out.println(log);
+
+            Point hotspot = null;
+            for(int i = 0; i < log.size() - 1 && hotspot == null; i++){
+                hotspot = triangulateHotspot(log.get(i), log.get(i + 1));
+                //System.out.println(hotspot);
+            }
+            // find buildings with this hotspot
+            for(Building b : buildings){
+                if(isPointInPolygon(b.lines, hotspot))
+                    buildsWithHotspots.add(b.name);
+            }
 
         }
-
-
+        for(String b : buildsWithHotspots) System.out.println(b);
     }
 }
