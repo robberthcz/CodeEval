@@ -42,10 +42,18 @@ import java.io.FileReader;
 import java.util.*;
 
 /**
+ * More in explanation.jpg. The most important point here is to think about the right triangle and tangens. With only two points and their azimuth angles, you can compute their intersection.
  * Created by Robert on 3.10.2016.
  */
 public class Main {
 
+    /**
+     * Almost the same implementation as in challenge Prisoner or Citizen.
+     * Here we don't consider the possibility of point ending up on the boundary of the polygon. This is due to points being defined by doubles and the fact that triangulation is only precise up to 0.1.
+     * @param lineSegs
+     * @param P
+     * @return
+     */
     public static boolean isPointInPolygon(LinkedList<LineSeg> lineSegs, Point P){
         // any intersection must be to the right of Point p
         Point rayEnd = new Point(Integer.MAX_VALUE, P.y);
@@ -71,7 +79,6 @@ public class Main {
                     && !(!l.isUpward() && P.y == leftP.y))
                 cn++;
         }
-
         return cn % 2 == 1;
     }
 
@@ -127,125 +134,80 @@ public class Main {
     }
 
     static class Point{
-        double x, y;
+        final double x, y;
         public Point(double x, double y){
             this.x = x; this.y = y;
-        }
-
-        @Override
-        public String toString() {
-            return "Point{" +
-                    "x=" + x +
-                    ", y=" + y +
-                    '}';
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Point point = (Point) o;
-
-            if (Double.compare(point.x, x) != 0) return false;
-            if (Double.compare(point.y, y) != 0) return false;
-
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int result;
-            long temp;
-            temp = Double.doubleToLongBits(x);
-            result = (int) (temp ^ (temp >>> 32));
-            temp = Double.doubleToLongBits(y);
-            result = 31 * result + (int) (temp ^ (temp >>> 32));
-            return result;
         }
     }
 
     static class Building{
-        String name;
-        LinkedList<LineSeg> lines;
+        final String name;
+        final LinkedList<LineSeg> lines;
         public Building(String name){
             this.name = name;
             this.lines = new LinkedList<>();
         }
     }
-
-    static class Tuple implements Comparable<Tuple>{
-        Point pos;
-        double azimuth;
+    // represents single hotspot measurement: angle and the current position of the car
+    static class Tuple{
+        final Point pos;
+        final double azimuth;
         public Tuple(Point pos, double azimuth){
             this.pos = pos; this.azimuth = azimuth;
-        }
-
-        public int compareTo(Tuple that){
-            int aziCmp = Double.compare(this.azimuth, that.azimuth);
-            if(aziCmp != 0) return aziCmp;
-            int xCmp = Double.compare(this.pos.x, that.pos.x);
-            if(xCmp != 0) return xCmp;
-            int yCmp = Double.compare(this.pos.y, that.pos.y);
-            return yCmp;
-        }
-
-        @Override
-        public String toString() {
-            return "Tuple{" +
-                    "pos=" + pos +
-                    ", azimuth=" + azimuth +
-                    '}';
         }
     }
 
     private static int getQuadrant(double angle){
         int toInt = Double.valueOf(angle).intValue();
-        if(0 < toInt && toInt < 90) return 1;
-        else if(90 < toInt && toInt < 180) return 2;
+        if(0 < toInt && toInt < 90)         return 1;
+        else if(90 < toInt && toInt < 180)  return 2;
         else if(180 < toInt && toInt < 270) return 3;
         else if(270 < toInt && toInt < 360) return 4;
         else return -1;
     }
 
+    private static double normalizeAngle(double angle, int q){
+        if(q == 1)      return angle;
+        else if(q == 2) return 180D - angle;
+        else if(q == 3) return angle - 180D;
+        else if(q == 4) return 360D - angle;
+        return 0D;
+    }
+
+    /**
+     *  Based on the knowledge of two points in space and two line segments coming out of these two points at certain angles, this function determines the intersection of these two line segments. Explained in explanation.jpg.
+     * @param t1
+     * @param t2
+     * @return
+     */
     public static Point triangulateHotspot(Tuple t1, Tuple t2){
+        double azi1 = t1.azimuth;
+        double azi2 = t2.azimuth;
         int q1 = getQuadrant(t1.azimuth);
         int q2 = getQuadrant(t2.azimuth);
-        // second point is either 0, 90, 180, 270 => tan could be 0
-        if(q2 == -1) return null;
-        
+        // azimuth is either 0, 90, 180, 270 => tan could be 0
+        // we also avoid computing special cases
+        if(q1 == -1){
+            // add a small amount so that azimuth lies strictly in one of the quadrants
+            azi1 = azi1 + 0.0001D;
+            // recompute the quadrant
+            q1 = getQuadrant(azi1);
+        }
+        if(q2 == -1){
+            azi2 = azi2 + 0.0001D;
+            q2 = getQuadrant(azi2);
+        }
+        // quadrants 1, 3 => both coordinates of hotspot are either smaller or bigger => no need for adjustment
         double i = 1D, k = 1D;
-        double theta1 = 0D, theta2 = 0D;
-        if(q1 == 1){
-            theta1 = t1.azimuth;
-        }
-        else if(q1 == 2){
-            theta1 = 180D - t1.azimuth;
-            i = -1D;
-        }
-        else if(q1 == 3){
-            theta1 = t1.azimuth - 180D;
-        }
-        else if(q1 == 4){
-            theta1 = 360D - t1.azimuth;
-            i = -1D;
-        }
-
-        if(q2 == 1){
-            theta2 = t2.azimuth;
-        }
-        else if(q2 == 2){
-            theta2 = 180D - t2.azimuth;
-            k = -1D;
-        }
-        else if(q2 == 3){
-            theta2 = t2.azimuth - 180D;
-        }
-        else if(q2 == 4){
-            theta2 = 360D - t2.azimuth;
-            k = -1D;
-        }
-
+        // size of the angle within a given  quadrant
+        double theta1 = normalizeAngle(azi1, q1);
+        double theta2 = normalizeAngle(azi2, q2);
+        // adjust for 2 cases where
+        // quadrant 2: hotspot is below the car and to the right => x coordinate of hotspot is strictly bigger, y is smaller
+        // quadrant 4: hotspot is above the car to the left => y coordinate of hotspot is strictly bigger, x is smaller
+        if(q1 == 2 || q1 == 4) i = -1D;
+        if(q2 == 2 || q2 == 4) k = -1D;
+        // constants m and n
         double m = i * Math.tan(Math.toRadians(theta1));
         double n = k / Math.tan(Math.toRadians(theta2));
 
@@ -255,7 +217,7 @@ public class Main {
         return new Point(c1, c2);
     }
 
-    public static int compareDouble(double d1, double d2){
+    private static int compareDouble(double d1, double d2){
         double dif = d1 - d2;
         if(dif > 0.00001) return 1;
         else if(dif < 0.00001) return -1;
@@ -264,6 +226,8 @@ public class Main {
 
     public static void main(String[] args) throws FileNotFoundException {
         Scanner textScan = new Scanner(new FileReader("src/whereIsWifi/input_large.txt"));
+        // for each hotspot, it contains the available logs represented as tuples
+        // hotspot is keyed by hashcode of its string representation
         HashMap<Integer, LinkedList<Tuple>> macToLog = new HashMap<>();
         LinkedList<Building> buildings = new LinkedList<>();
 
@@ -273,21 +237,19 @@ public class Main {
             // no more buildings
             if(line.equals("")) break;
 
-            String nameAndCoords[] = line.split(" ");
-            Building b = new Building(nameAndCoords[0]);
-            Point[] points = new Point[nameAndCoords.length - 1];
+            String nameAndPoints[] = line.split(" ");
+            Building b = new Building(nameAndPoints[0]);
+            Point[] points = new Point[nameAndPoints.length - 1];
 
-            for(int i = 1; i < nameAndCoords.length; i++){
-                String[] coord = nameAndCoords[i].split(";");
-                points[i - 1] = new Point(Double.parseDouble(coord[0]), Double.parseDouble(coord[1]));
+            for(int i = 1; i < nameAndPoints.length; i++){
+                String[] point = nameAndPoints[i].split(";");
+                points[i - 1] = new Point(Double.parseDouble(point[0]), Double.parseDouble(point[1]));
             }
 
             for(int i = 0; i < points.length - 1; i++){
                 b.lines.add(new LineSeg(points[i], points[i + 1]));
             }
             buildings.add(b);
-
-                        //System.out.println(b);
         }
 
         // Wi-Fi radar log
@@ -299,29 +261,32 @@ public class Main {
 
             for(int i = 1; i < radarlog.length; i++){
                 String[] macAndAngle = radarlog[i].split(";");
-                if(!macToLog.containsKey(macAndAngle[0].hashCode()))
-                    macToLog.put(macAndAngle[0].hashCode(), new LinkedList<Tuple>());
-                macToLog.get(macAndAngle[0].hashCode()).add(new Tuple(curPos, Double.parseDouble(macAndAngle[1])));
+                String MAC = macAndAngle[0];
+                double angle = Double.parseDouble(macAndAngle[1]);
+                // found new MAC address
+                if(!macToLog.containsKey(MAC.hashCode())) macToLog.put(MAC.hashCode(), new LinkedList<Tuple>());
+                // two measurements suffice
+                else if(macToLog.get(MAC.hashCode()).size() > 2) continue;
+
+                // add new measurement for this MAC address
+                macToLog.get(MAC.hashCode()).add(new Tuple(curPos, angle));
             }
         }
+
         TreeSet<String> buildsWithHotspots = new TreeSet<>();
         for(int key : macToLog.keySet()){
             LinkedList<Tuple> log = macToLog.get(key);
-            //Collections.sort(log);
-            //System.out.println(log);
 
-            Point hotspot = null;
-            for(int i = 0; i < log.size() - 1 && hotspot == null; i++){
-                hotspot = triangulateHotspot(log.get(i), log.get(i + 1));
-                //System.out.println(hotspot);
-            }
-            // find buildings with this hotspot
+            Point hotspot = triangulateHotspot(log.get(0), log.get(1));
+            // find buildings with this hotspot and add them to set
             for(Building b : buildings){
                 if(isPointInPolygon(b.lines, hotspot))
                     buildsWithHotspots.add(b.name);
             }
 
         }
+        // for CodeEval submittion purposes
+        // in alphabetical order, print the names of buildings with hotspots in them
         for(String b : buildsWithHotspots) System.out.println(b);
     }
 }
