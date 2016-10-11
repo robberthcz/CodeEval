@@ -57,7 +57,7 @@ public class Main {
                 if(e.agent.edges.size() != 0) Q.add(e.agent.edges.removeFirst());
             }
             else if(e.to >= 100 && isRoomFree.get(e.to)){
-                makeQueueWait(e, Q, 5);
+                makeQueueWait(e, Q, 5, false);
                 e.agent.cur.add(Calendar.SECOND, e.cost);
                 isRoomFree.put(e.to, false);
                 if(e.agent.edges.size() != 0) Q.add(e.agent.edges.removeFirst());
@@ -67,7 +67,7 @@ public class Main {
                 Q.add(e);
             }
             else if(e.to < 100){
-                makeQueueWait(e, Q, 5);
+                makeQueueWait(e, Q, 5, true);
                 e.agent.cur.add(Calendar.SECOND, e.cost);
                 if(e.agent.edges.size() != 0) Q.add(e.agent.edges.removeFirst());
             }
@@ -77,14 +77,25 @@ public class Main {
         for(Agent agent : agents) System.out.println(sdf.format(agent.start.getTime()) + " " + sdf.format(agent.cur.getTime()));
     }
 
-    private static void makeQueueWait(Edge e, TreeSet<Edge> Q, int cost){
+    private static void makeQueueWait(Edge e, TreeSet<Edge> Q, int cost, boolean isElevator){
         if(Q.size() == 0) return;
-        while(Q.first().to == e.to && Q.first().getTime() == e.getTime()){
-            Edge first = Q.pollFirst();
-            first.agent.cur.add(Calendar.SECOND, cost);
-            Q.add(first);
+        if(!isElevator){
+            while(Q.first().to == e.to && Q.first().getTime() == e.getTime()){
+                Edge first = Q.pollFirst();
+                first.agent.cur.add(Calendar.SECOND, cost);
+                Q.add(first);
+            }
         }
+        else{
+            while(Q.first().to == e.to && Q.first().getTime() == e.getTime() && Q.first().isGoingUp() == e.isGoingUp()){
+                Edge first = Q.pollFirst();
+                first.agent.cur.add(Calendar.SECOND, cost);
+                Q.add(first);
+            }
+        }
+
     }
+
 
 
     static class Agent{
@@ -109,8 +120,20 @@ public class Main {
             if(this.getTime() != that.getTime()) return Integer.compare(this.getTime(), that.getTime());
             else if(this.from == this.to) return -1;
             else if(that.from == that.to) return 1;
+            else if(this.to > 0 && this.to < 100 && this.to == that.to){
+                if(this.isGoingUp() != that.isGoingUp()) return Boolean.compare(this.isGoingUp(), that.isGoingUp());
+            }
             return Integer.compare(this.agent.seniority, that.agent.seniority);
         }
+
+        private boolean isGoingUp(){
+            Edge next = agent.edges.getFirst();
+            int dest = next.to;
+
+            if(dest > (to*100 + 99)) return true;
+            else return false;
+        }
+
 
         public int getTime(){
             return cost + agent.cur.get(Calendar.HOUR)*3600 + agent.cur.get(Calendar.MINUTE)*60 + agent.cur.get
@@ -132,7 +155,7 @@ public class Main {
     }
 
     public static void main(String[] args) throws FileNotFoundException, ParseException {
-        Scanner textScan = new Scanner(new FileReader("src/visitToTheHeadquarters/input_my.txt"));
+        Scanner textScan = new Scanner(new FileReader("src/visitToTheHeadquarters/input_large.txt"));
         ArrayList<Agent> agents = new ArrayList<Agent>();
         HashMap<Integer, Boolean> isRoomFree = new HashMap<Integer, Boolean>();
 
