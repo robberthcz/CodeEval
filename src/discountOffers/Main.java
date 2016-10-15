@@ -47,6 +47,8 @@ public class Main {
         this.products = products;
         this.m = new double[customers.length][products.length];
         this.adj = new HashMap<>();
+        this.S = customers.length + products.length;
+        this.T = S + 1;
 
         double max = 0;
 
@@ -64,24 +66,22 @@ public class Main {
 
         for(int i = 0; i < customers.length; i++){
             for(int j = 0; j < products.length; j++){
-                Edge e1 = new Edge(i, j + customers.length, Double.valueOf(max*100D - m[i][j]*100D).intValue());
-                addEdge(e1);
-                Edge e2 = new Edge(j + customers.length, i, Double.valueOf(max*100D - m[i][j]*100D).intValue());
-                addEdge(e2);
+                int cost = Double.valueOf(max*100D - m[i][j]*100D).intValue();
+                Edge e = new Edge(i, j + customers.length, cost);
+                addEdge(e);
             }
         }
         // s to X, Y to t
-        this.S = customers.length + products.length;
-        this.T = S + 1;
+        adj.put(S, new HashSet<>());
+        adj.put(T, new HashSet<>());
         for(int i = 0; i < customers.length; i++){
             Edge e = new Edge(S, i, 0);
-            addEdge(e);
+            adj.get(S).add(e);
         }
         for(int i = 0; i < products.length; i++){
             Edge e = new Edge(i + customers.length, T, 0);
-            addEdge(e);
+            adj.get(e.from).add(e);
         }
-        adj.put(T, new HashSet<>());
 
         int[] pair = new int[T + 1];
         int[] p = new int[T + 1];
@@ -97,7 +97,7 @@ public class Main {
         for(int i = 0; i < customers.length; i++){
             if(pair[i] != Integer.MAX_VALUE){
                 sum += m[i][pair[i] - customers.length];
-                System.out.println(customers[i] + " -> " + products[pair[i]-customers.length] + " " + m[i][pair[i] - customers.length]);
+                //System.out.println(customers[i] + " -> " + products[pair[i]-customers.length] + " " + m[i][pair[i] - customers.length]);
             }
 
         }
@@ -106,9 +106,6 @@ public class Main {
         decSep.setDecimalSeparator('.');
         df.setDecimalFormatSymbols(decSep);
         System.out.println(df.format(sum));
-
-
-
     }
 
     public int gcd(int p, int q) {
@@ -129,22 +126,15 @@ public class Main {
         while(y != S){
             int x = edgeTo[y].from;
             edgeTo[y].matched = true;
-            for(Edge e : adj.get(edgeTo[y].to)){
-                if(e.to == edgeTo[y].from) e.matched = true;
-            }
 
             pair[x] = y;
             pair[y] = x;
 
-            y = edgeTo[x].from;
+            y = edgeTo[x].getTo(x);
             pair[y] = Integer.MAX_VALUE;
             if(y != S){
                 edgeTo[x].matched = false;
-                for(Edge e : adj.get(edgeTo[x].to)){
-                    if(e.to == edgeTo[x].from) e.matched = false;
-                }
             }
-
         }
     }
 
@@ -160,27 +150,29 @@ public class Main {
             Vertex min = Q.pollFirst();
 
             for(Edge e : adj.get(min.V)){
+                int from = e.getFrom(min.V);
+                int to = e.getTo(min.V);
                 // skip matched v in X, when coming from S
-                if(min.V == S && pair[e.to] != Integer.MAX_VALUE) continue;
+                if(min.V == S && pair[to] != Integer.MAX_VALUE) continue;
                 // matched edge from v in X, continue
-                if(min.V < customers.length && e.matched) continue;
+                if(isX(min.V) && e.matched) continue;
                 // unmatched v in Y, go to T only
-                if(min.V >= customers.length && min.V < S && pair[min.V] == Integer.MAX_VALUE && e.to != T) continue;
+                if(isY(min.V) && pair[min.V] == Integer.MAX_VALUE && to != T) continue;
                 // matched v in Y, go to X by matched edge only
-                if(min.V >= customers.length && min.V < S && pair[min.V] != Integer.MAX_VALUE && !e.matched) continue;
+                if(isY(min.V) && pair[min.V] != Integer.MAX_VALUE && !e.matched) continue;
 
-                int x = Math.min(e.from, e.to);
-                int y = Math.max(e.from, e.to);
+                int x = Math.min(from, to);
+                int y = Math.max(from, to);
                 int cost = e.cost;
                 if(x < S && y < S) cost = p[x] + e.cost - p[y];
-                if(e.matched) cost *= -1;
+                if(e.matched && cost != 0) System.out.println("matched edge does not have zero cost");
 
-                if(!marked[e.to] || distTo[e.to] > ( cost + distTo[e.from])){
-                    distTo[e.to] = cost + distTo[e.from];
-                    Q.remove(new Vertex(e.to, 0));
-                    Q.add(new Vertex(e.to, distTo[e.to]));
-                    marked[e.to] = true;
-                    edgeTo[e.to] = e;
+                if(!marked[to] || distTo[to] > ( cost + distTo[from])){
+                    distTo[to] = cost + distTo[from];
+                    Q.remove(new Vertex(to, 0));
+                    Q.add(new Vertex(to, distTo[to]));
+                    marked[to] = true;
+                    edgeTo[to] = e;
                 }
             }
         }
@@ -189,9 +181,20 @@ public class Main {
         return marked[endV] ? distTo[endV] : - 1;
     }
 
+    private boolean isX(int v){
+        return v < customers.length;
+    }
+
+    private boolean isY(int v){
+        return v >= customers.length && v < S;
+    }
+
     public void addEdge(Edge e){
         if(!adj.containsKey(e.from)) adj.put(e.from, new HashSet<Edge>());
         adj.get(e.from).add(e);
+
+        if(!adj.containsKey(e.to)) adj.put(e.to, new HashSet<Edge>());
+        adj.get(e.to).add(e);
     }
 
     class Edge{
@@ -200,6 +203,16 @@ public class Main {
         public Edge(int from, int to, int cost){
             this.from = from; this.to = to; this.cost = cost;
             matched = false;
+        }
+        
+        public int getFrom(int v){
+            if(v == from || from == S) return from;
+            else return to;
+        }
+        
+        public int getTo(int v){
+            if(v == to && to != T) return from;
+            else return to;
         }
 
         @Override
