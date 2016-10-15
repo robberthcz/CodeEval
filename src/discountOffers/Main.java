@@ -27,6 +27,8 @@ package discountOffers;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.*;
 
 /**
@@ -37,11 +39,16 @@ public class Main {
     private double[][] m;
     private HashSet<Character> vowels = new HashSet<Character>(){{ add('a'); add('e'); add('i'); add('o'); add('u');
         add('y');}};
+    private HashMap<Integer, HashSet<Edge>> adj;
+    private final int S, T;
 
     public Main(String[] customers, String[] products){
         this.customers = customers;
         this.products = products;
         this.m = new double[customers.length][products.length];
+        this.adj = new HashMap<>();
+
+        double max = 0;
 
         for(int i = 0; i < customers.length; i++){
             int numOfVows = getNumOfVowels(customers[i]);
@@ -51,59 +58,57 @@ public class Main {
 
                 if(gcd(customers[i].length(), products[j].length()) > 1) m[i][j] *= 1.5;
                 //System.out.println(m[i][j] + " " + customers[i] + " " + products[j]);
+                if(m[i][j] > max) max = m[i][j];
             }
         }
 
-        LinkedList<Integer> unassignedC = new LinkedList<Integer>();
-        HashMap<Integer, Integer> prodToCustomer = new HashMap<Integer, Integer>();
-        double[][] prices = new double[customers.length][products.length];
-
-        for(int i = 0; i < customers.length; i++) unassignedC.add(i);
-
-        while(unassignedC.size() > 0) {
-            auction(unassignedC, prodToCustomer, prices, 0.00001);
-        }
-
-        int sum = 0;
-        for(int k : prodToCustomer.keySet()){
-            sum += m[prodToCustomer.get(k)][k];
-        }
-        System.out.println(sum);
-    }
-
-    private void auction(LinkedList<Integer> unassignedC, HashMap<Integer, Integer> prodToCustomer, double[][] prices,
-                         double
-            eps){
-        int first = unassignedC.removeFirst();
-
-        double max = Double.MIN_VALUE;
-        int maxId = Integer.MIN_VALUE;
-        // find object for this customer with max value
-        for(int i = 0; i < m[first].length; i++){
-            double cur = (m[first][i] - prices[first][i]) - eps;
-            if(cur > max){
-                max = cur;
-                maxId = i;
+        for(int i = 0; i < customers.length; i++){
+            for(int j = 0; j < products.length; j++){
+                Edge e1 = new Edge(i, j + customers.length, Double.valueOf(max*100D - m[i][j]*100D).intValue());
+                addEdge(e1);
+                Edge e2 = new Edge(j + customers.length, i, Double.valueOf(max*100D - m[i][j]*100D).intValue());
+                addEdge(e2);
             }
         }
-        double sndMax = Double.MIN_VALUE;
-        int sndMaxId = Integer.MIN_VALUE;
-        // find object for this customer with the second max value
-        for(int i = 0; i < m[first].length; i++){
-            double cur = (m[first][i] - prices[first][i]) - eps;
-            if(cur > sndMax && cur != max){
-                sndMax = cur;
-                sndMaxId = i;
+        // s to X, Y to t
+        this.S = customers.length + products.length;
+        this.T = S + 1;
+        for(int i = 0; i < customers.length; i++){
+            Edge e = new Edge(S, i, 0);
+            addEdge(e);
+        }
+        for(int i = 0; i < products.length; i++){
+            Edge e = new Edge(i + customers.length, T, 0);
+            addEdge(e);
+        }
+        adj.put(T, new HashSet<>());
+
+        int[] pair = new int[T + 1];
+        int[] p = new int[T + 1];
+        Arrays.fill(pair, Integer.MAX_VALUE);
+        int res = 1;
+        while(res != -1){
+            Edge[] edgeTo = new Edge[T + 1];
+            res = dijkstraSP(S, T, edgeTo, pair, p);
+            if(res != -1) reassign(pair, edgeTo);
+        }
+
+        double sum = 0;
+        for(int i = 0; i < customers.length; i++){
+            if(pair[i] != Integer.MAX_VALUE){
+                sum += m[i][pair[i] - customers.length];
+                System.out.println(customers[i] + " -> " + products[pair[i]-customers.length] + " " + m[i][pair[i] - customers.length]);
             }
+
         }
-        double incr = max - sndMax + eps;
-        if(maxId < 0){
-            return;
-        }
-        prices[first][maxId] += incr;
-        if(prodToCustomer.containsKey(maxId))
-            unassignedC.addLast(prodToCustomer.get(maxId));
-        prodToCustomer.put(maxId, first);
+        DecimalFormat df = new DecimalFormat("0.00");
+        DecimalFormatSymbols decSep = new DecimalFormatSymbols();
+        decSep.setDecimalSeparator('.');
+        df.setDecimalFormatSymbols(decSep);
+        System.out.println(df.format(sum));
+
+
+
     }
 
     public int gcd(int p, int q) {
@@ -119,15 +124,143 @@ public class Main {
         return count;
     }
 
+    private void reassign(int[] pair, Edge[] edgeTo){
+        int y = edgeTo[T].from;
+        while(y != S){
+            int x = edgeTo[y].from;
+            edgeTo[y].matched = true;
+            for(Edge e : adj.get(edgeTo[y].to)){
+                if(e.to == edgeTo[y].from) e.matched = true;
+            }
+
+            pair[x] = y;
+            pair[y] = x;
+
+            y = edgeTo[x].from;
+            pair[y] = Integer.MAX_VALUE;
+            if(y != S){
+                edgeTo[x].matched = false;
+                for(Edge e : adj.get(edgeTo[x].to)){
+                    if(e.to == edgeTo[x].from) e.matched = false;
+                }
+            }
+
+        }
+    }
+
+    public int dijkstraSP(int startV, int endV, Edge[] edgeTo, int[] pair, int[] p){
+        int[] distTo = new int[T + 1];
+        boolean[] marked = new boolean[T + 1];
+        TreeSet<Vertex> Q = new TreeSet<Vertex>();
+
+        distTo[startV] = 0;
+        marked[startV] = true;
+        Q.add(new Vertex(startV, 0));
+        while(!Q.isEmpty()){
+            Vertex min = Q.pollFirst();
+
+            for(Edge e : adj.get(min.V)){
+                // skip matched v in X, when coming from S
+                if(min.V == S && pair[e.to] != Integer.MAX_VALUE) continue;
+                // matched edge from v in X, continue
+                if(min.V < customers.length && e.matched) continue;
+                // unmatched v in Y, go to T only
+                if(min.V >= customers.length && min.V < S && pair[min.V] == Integer.MAX_VALUE && e.to != T) continue;
+                // matched v in Y, go to X by matched edge only
+                if(min.V >= customers.length && min.V < S && pair[min.V] != Integer.MAX_VALUE && !e.matched) continue;
+
+                int x = Math.min(e.from, e.to);
+                int y = Math.max(e.from, e.to);
+                int cost = e.cost;
+                if(x < S && y < S) cost = p[x] + e.cost - p[y];
+                if(e.matched) cost *= -1;
+
+                if(!marked[e.to] || distTo[e.to] > ( cost + distTo[e.from])){
+                    distTo[e.to] = cost + distTo[e.from];
+                    Q.remove(new Vertex(e.to, 0));
+                    Q.add(new Vertex(e.to, distTo[e.to]));
+                    marked[e.to] = true;
+                    edgeTo[e.to] = e;
+                }
+            }
+        }
+
+        for(int i = 0; i < p.length; i++) p[i] += distTo[i];
+        return marked[endV] ? distTo[endV] : - 1;
+    }
+
+    public void addEdge(Edge e){
+        if(!adj.containsKey(e.from)) adj.put(e.from, new HashSet<Edge>());
+        adj.get(e.from).add(e);
+    }
+
+    class Edge{
+        final int from, to, cost;
+        boolean matched;
+        public Edge(int from, int to, int cost){
+            this.from = from; this.to = to; this.cost = cost;
+            matched = false;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Edge edge = (Edge) o;
+
+            if (cost != edge.cost) return false;
+            if (from != edge.from) return false;
+            if (to != edge.to) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = from;
+            result = 31 * result + to;
+            result = 31 * result + cost;
+            return result;
+        }
+    }
+
+    class Vertex implements Comparable<Vertex>{
+        final int V;
+        int distTo;
+        public Vertex(int V, int distTo){
+            this.V = V; this.distTo = distTo;
+        }
+
+        @Override
+        public String toString() {
+            return "Vertex{" +
+                    "V=" + V +
+                    ", distTo=" + distTo +
+                    '}';
+        }
+
+        public int compareTo(Vertex that){
+            int distToCmp = Integer.compare(this.distTo, that.distTo);
+            int vCmp = Integer.compare(this.V, that.V);
+            return distToCmp != 0 ? distToCmp : vCmp;
+        }
+    }
+
     public static void main(String[] args) throws FileNotFoundException {
-        Scanner textScan = new Scanner(new FileReader("src/discountOffers/input.txt"));
+        Scanner textScan = new Scanner(new FileReader("src/discountOffers/input_test.txt"));
 
         while(textScan.hasNextLine()){
             String line[] = textScan.nextLine().split(";");
+            if(line.length < 2){
+                System.out.println("0.00");
+                continue;
+            }
             String[] customers = line[0].toLowerCase().replaceAll("[^a-z,]", "").split(",");
             String[] products = line[1].toLowerCase().replaceAll("[^a-z,]", "").split(",");
 
             Main test = new Main(customers, products);
+
         }
     }
 }
