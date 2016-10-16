@@ -32,15 +32,24 @@ import java.text.DecimalFormatSymbols;
 import java.util.*;
 
 /**
+ * This is the assignment problem with the goal of maximizing the cost of the matching.
+ * We use the algorithm as described in pdf file, which is the shortest path algorithm to find the perfect matching of bipartite graph with the lowest weight. Even though we have to maximize the cost of matching, we can still use this algorithm.
+ * We just have to find the edge with maximum cost, then for each edge we change the cost by adding the maximum cost and subtracting the original cost of the edge.
+ * Also, the assignment problem assumes equal number of agents and tasks => but CodeEval test-cases will include varying number of customers and products, so ones has to add dummies. It took me a day to realize this!!!!
  * Created by Robert on 23.8.2016.
  */
 public class Main {
+    // customers = X, products = Y
     private final String[] customers, products;
+    // the cost matrix
     private double[][] m;
     private HashSet<Character> vowels = new HashSet<Character>(){{ add('a'); add('e'); add('i'); add('o'); add('u');
         add('y');}};
+    // adjacency list
     private HashMap<Integer, HashSet<Edge>> adj;
+    // S connects to all v in X, T to all v in Y
     private final int S, T;
+    private int[] pair, p;
 
     public Main(String[] customers, String[] products){
         this.customers = customers;
@@ -49,24 +58,31 @@ public class Main {
         this.adj = new HashMap<>();
         this.S = customers.length + products.length;
         this.T = S + 1;
-
+        // allows us to change this problem to min-cost matching
         double max = 0;
+        // pair[v1]=v2, pair[v2]=v1,  vertex v1 is matched to vertex v2
+        this.pair = new int[T + 1];
+        // compatible prices as described in the slides
+        this.p = new int[T + 1];
 
+        // calculate the cost matrix
         for(int i = 0; i < customers.length; i++){
             int numOfVows = getNumOfVowels(customers[i]);
             for(int j = 0; j < products.length; j++){
                 if(products[j].length() % 2 == 0) m[i][j] = numOfVows * 1.5;
                 else                              m[i][j] = customers[i].length() - numOfVows;
-
                 if(gcd(customers[i].length(), products[j].length()) > 1) m[i][j] *= 1.5;
-                //System.out.println(m[i][j] + " " + customers[i] + " " + products[j]);
+                // dummy product, zero cost
+                if(products[j].length() == 0) m[i][j] = 0;
+
                 if(m[i][j] > max) max = m[i][j];
             }
         }
-
+        // 1 undirected edge, for each (x, y)
+        // product numbers are moved to right by the number of customers
         for(int i = 0; i < customers.length; i++){
             for(int j = 0; j < products.length; j++){
-                int cost = Double.valueOf(max*100D - m[i][j]*100D).intValue();
+                int cost = Double.valueOf(max*100 - m[i][j]*100).intValue();
                 Edge e = new Edge(i, j + customers.length, cost);
                 addEdge(e);
             }
@@ -80,27 +96,26 @@ public class Main {
         }
         for(int i = 0; i < products.length; i++){
             Edge e = new Edge(i + customers.length, T, 0);
-            adj.get(e.from).add(e);
+            adj.get(e.x).add(e);
         }
 
-        int[] pair = new int[T + 1];
-        int[] p = new int[T + 1];
-        Arrays.fill(pair, Integer.MAX_VALUE);
+        // find shortest path while the T can be reached
         int res = 1;
+        Arrays.fill(pair, Integer.MAX_VALUE);
         while(res != -1){
+            int[] distTo = new int[T + 1];
             Edge[] edgeTo = new Edge[T + 1];
-            res = dijkstraSP(S, T, edgeTo, pair, p);
-            if(res != -1) reassign(pair, edgeTo);
+            res = dijkstraSP(S, T, edgeTo, distTo);
+            // update p
+            for(int i = 0; i < p.length; i++) p[i] += distTo[i];
+            // reassign pairs and matched/unmatched edges
+            if(res != -1) reassign(edgeTo);
         }
-
+        // get the max cost
         double sum = 0;
-        for(int i = 0; i < customers.length; i++){
-            if(pair[i] != Integer.MAX_VALUE){
-                sum += m[i][pair[i] - customers.length];
-                //System.out.println(customers[i] + " -> " + products[pair[i]-customers.length] + " " + m[i][pair[i] - customers.length]);
-            }
-
-        }
+        for(int i = 0; i < customers.length; i++)
+            if(pair[i] != Integer.MAX_VALUE) sum += m[i][pair[i] - customers.length];
+        // print the result
         DecimalFormat df = new DecimalFormat("0.00");
         DecimalFormatSymbols decSep = new DecimalFormatSymbols();
         decSep.setDecimalSeparator('.');
@@ -121,64 +136,82 @@ public class Main {
         return count;
     }
 
-    private void reassign(int[] pair, Edge[] edgeTo){
-        int y = edgeTo[T].from;
+    /**
+     * According to shortest path found, this function, rearranges the matched and unmatched edges on the shortest path.
+     * @param edgeTo
+     */
+    private void reassign(Edge[] edgeTo){
+        // how did we get to T from Y
+        int y = edgeTo[T].x;
         while(y != S){
-            int x = edgeTo[y].from;
+            // traveled by unmatched edge from x in X to y in Y, now it is matched
+            int x = edgeTo[y].x;
             edgeTo[y].matched = true;
 
+            // reassign pairs
             pair[x] = y;
             pair[y] = x;
 
+            // traveled by matched edge from y in Y to x in X
             y = edgeTo[x].getTo(x);
+            // y in Y will be paired with some x in X by the next edge on the shortest path
             pair[y] = Integer.MAX_VALUE;
-            if(y != S){
-                edgeTo[x].matched = false;
-            }
+            if(y != S) edgeTo[x].matched = false;
         }
     }
 
-    public int dijkstraSP(int startV, int endV, Edge[] edgeTo, int[] pair, int[] p){
-        int[] distTo = new int[T + 1];
+    public int dijkstraSP(int startV, int endV, Edge[] edgeTo, int[] distTo){
         boolean[] marked = new boolean[T + 1];
         TreeSet<Vertex> Q = new TreeSet<Vertex>();
 
+        Arrays.fill(distTo, Integer.MAX_VALUE);
         distTo[startV] = 0;
-        marked[startV] = true;
         Q.add(new Vertex(startV, 0));
         while(!Q.isEmpty()){
             Vertex min = Q.pollFirst();
+            // no decrease-key operation, but control for already polled vertices
+            if(marked[min.V]) continue;
+            marked[min.V] = true;
 
             for(Edge e : adj.get(min.V)){
+                if(isNotViableEdge(min, e, pair)) continue;
+
                 int from = e.getFrom(min.V);
                 int to = e.getTo(min.V);
-                // skip matched v in X, when coming from S
-                if(min.V == S && pair[to] != Integer.MAX_VALUE) continue;
-                // matched edge from v in X, continue
-                if(isX(min.V) && e.matched) continue;
-                // unmatched v in Y, go to T only
-                if(isY(min.V) && pair[min.V] == Integer.MAX_VALUE && to != T) continue;
-                // matched v in Y, go to X by matched edge only
-                if(isY(min.V) && pair[min.V] != Integer.MAX_VALUE && !e.matched) continue;
-
-                int x = Math.min(from, to);
-                int y = Math.max(from, to);
                 int cost = e.cost;
-                if(x < S && y < S) cost = p[x] + e.cost - p[y];
-                if(e.matched && cost != 0) System.out.println("matched edge does not have zero cost");
+                if(e.x < S && e.y < S) cost = p[e.x] + e.cost - p[e.y];
+                if(e.matched && cost != 0) System.out.println("matched edge should have zero cost");
+                if(cost < 0) System.out.println("no edge should have negative cost");
 
-                if(!marked[to] || distTo[to] > ( cost + distTo[from])){
+                if(distTo[to] > ( cost + distTo[from])){
                     distTo[to] = cost + distTo[from];
-                    Q.remove(new Vertex(to, 0));
                     Q.add(new Vertex(to, distTo[to]));
-                    marked[to] = true;
                     edgeTo[to] = e;
                 }
             }
         }
 
-        for(int i = 0; i < p.length; i++) p[i] += distTo[i];
-        return marked[endV] ? distTo[endV] : - 1;
+        return distTo[endV] != Integer.MAX_VALUE ? distTo[endV] : - 1;
+    }
+
+    /**
+     * From X to Y => only travel by unmatched edge, from Y to X  only with matched edge.
+     * From S only travel to unpaired x in X. From Y to T only travel from unmatched y in Y.
+     * @param from
+     * @param e
+     * @param pair
+     * @return
+     */
+    private boolean isNotViableEdge(Vertex from, Edge e, int[] pair){
+        int to = e.getTo(from.V);
+        // skip matched v in X, when coming from S
+        return (from.V == S && pair[to] != Integer.MAX_VALUE) ||
+        // matched edge from v in X, continue
+        (isX(from.V) && e.matched) ||
+        // unmatched v in Y, go to T only
+        (isY(from.V) && pair[from.V] == Integer.MAX_VALUE && to != T) ||
+        // matched v in Y, go to X by matched edge only
+        (isY(from.V) && pair[from.V] != Integer.MAX_VALUE && !e.matched);
     }
 
     private boolean isX(int v){
@@ -190,29 +223,31 @@ public class Main {
     }
 
     public void addEdge(Edge e){
-        if(!adj.containsKey(e.from)) adj.put(e.from, new HashSet<Edge>());
-        adj.get(e.from).add(e);
+        if(!adj.containsKey(e.x)) adj.put(e.x, new HashSet<Edge>());
+        adj.get(e.x).add(e);
 
-        if(!adj.containsKey(e.to)) adj.put(e.to, new HashSet<Edge>());
-        adj.get(e.to).add(e);
+        if(!adj.containsKey(e.y)) adj.put(e.y, new HashSet<Edge>());
+        adj.get(e.y).add(e);
     }
 
     class Edge{
-        final int from, to, cost;
+        // edge always starts at X and ends at Y
+        // sometimes it functions as dir. edge from X to Y, or the opposite
+        final int x, y, cost;
         boolean matched;
-        public Edge(int from, int to, int cost){
-            this.from = from; this.to = to; this.cost = cost;
+        public Edge(int x, int y, int cost){
+            this.x = x; this.y = y; this.cost = cost;
             matched = false;
         }
-        
+        // v is the from vertex as viewed from the outside
         public int getFrom(int v){
-            if(v == from || from == S) return from;
-            else return to;
+            if(v == x || x == S) return x;
+            else return y;
         }
         
         public int getTo(int v){
-            if(v == to && to != T) return from;
-            else return to;
+            if(v == y && y != T) return x;
+            else return y;
         }
 
         @Override
@@ -223,16 +258,16 @@ public class Main {
             Edge edge = (Edge) o;
 
             if (cost != edge.cost) return false;
-            if (from != edge.from) return false;
-            if (to != edge.to) return false;
+            if (x != edge.x) return false;
+            if (y != edge.y) return false;
 
             return true;
         }
 
         @Override
         public int hashCode() {
-            int result = from;
-            result = 31 * result + to;
+            int result = x;
+            result = 31 * result + y;
             result = 31 * result + cost;
             return result;
         }
@@ -245,14 +280,6 @@ public class Main {
             this.V = V; this.distTo = distTo;
         }
 
-        @Override
-        public String toString() {
-            return "Vertex{" +
-                    "V=" + V +
-                    ", distTo=" + distTo +
-                    '}';
-        }
-
         public int compareTo(Vertex that){
             int distToCmp = Integer.compare(this.distTo, that.distTo);
             int vCmp = Integer.compare(this.V, that.V);
@@ -261,10 +288,11 @@ public class Main {
     }
 
     public static void main(String[] args) throws FileNotFoundException {
-        Scanner textScan = new Scanner(new FileReader("src/discountOffers/input_test.txt"));
+        Scanner textScan = new Scanner(new FileReader("src/discountOffers/input.txt"));
 
         while(textScan.hasNextLine()){
             String line[] = textScan.nextLine().split(";");
+            // no products or no customers or both
             if(line.length < 2){
                 System.out.println("0.00");
                 continue;
@@ -272,8 +300,17 @@ public class Main {
             String[] customers = line[0].toLowerCase().replaceAll("[^a-z,]", "").split(",");
             String[] products = line[1].toLowerCase().replaceAll("[^a-z,]", "").split(",");
 
-            Main test = new Main(customers, products);
+            // customers and products must be equal in number, fill with dummies
+            int maxSize = Math.max(customers.length, products.length);
+            String custFilled[] = new String[maxSize];
+            String prodFilled[] = new String[maxSize];
+            Arrays.fill(custFilled, "");
+            Arrays.fill(prodFilled, "");
+            for(int i = 0;i < customers.length; i++) custFilled[i] = customers[i];
+            for(int i = 0;i < products.length; i++) prodFilled[i] = products[i];
 
+            //Main test = new Main(customers, products);
+            Main test = new Main(custFilled, prodFilled);
         }
     }
 }
