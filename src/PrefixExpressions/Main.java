@@ -1,56 +1,38 @@
+/**
+ Prefix expressions
+ Challenge Description:
+ You are given a prefix expression. Write a program which evaluates it.
+
+ Input sample:
+ Your program should accept a file as its first argument. The file contains one prefix expression per line.
+ For example:
+ * + 2 3 4
+
+ Your program should read this file and insert it into any data structure you like. Traverse this data structure and evaluate the prefix expression. Each token is delimited by a whitespace. You may assume that sum â€˜+â€™, multiplication â€˜*â€™ and division â€˜/â€™ are the only valid operators appearing in the test data.
+
+ Output sample:
+ Print to stdout the output of the prefix expression, one per line.
+ For example:
+ 20
+
+ Constraints:
+ â€¢The evaluation result will always be an integer â‰¥ 0.
+ â€¢The number of the test cases is â‰¤ 40.
+ */
 package PrefixExpressions;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.LinkedList;
 import java.util.Scanner;
-/**
- * 
- * Challenge Description:
- * 
- * You are given a prefix expression. Write a program which evaluates it.
- * 
- * Input sample:
- * 
- * Your program should accept a file as its first argument. The file contains
- * one prefix expression per line.
- * 
- * For example:
- * 
- * 
- * + 2 3 4
- * 
- * Your program should read this file and insert it into any data structure you
- * like. Traverse this data structure and evaluate the prefix expression. Each
- * token is delimited by a whitespace. You may assume that sum ‘+’,
- * multiplication ‘*’ and division ‘/’ are the only valid operators appearing in
- * the test data.
- * 
- * Output sample:
- * 
- * Print to stdout the output of the prefix expression, one per line.
- * 
- * For example:
- * 
- * 
- * 20
- * 
- * 
- * 
- * 
- * @author Robb
- *
- *
- */
+
 public class Main {
 
 	public static int evalautePrefix(String[] prefix) {
-
 		LinkedList<Double> stack = new LinkedList<Double>();
 
 		// traverse the string array from right to left
 		for (int i = prefix.length - 1; i >= 0; i--) {
-
 			// if prefix[i] is number then save it
 			if (isDigit(prefix[i])) {
 				stack.add(Double.parseDouble(prefix[i]));
@@ -66,12 +48,9 @@ public class Main {
 			// result of applying the prefix[i] to first and second doubles
 			double toStack;
 
-			if (prefix[i].equals("*"))
-				toStack = first * second;
-			else if (prefix[i].equals("+"))
-				toStack = first + second;
-			else
-				toStack = first / second;
+			if (prefix[i].equals("*"))	    toStack = first * second;
+			else if (prefix[i].equals("+"))	toStack = first + second;
+			else				            toStack = first / second;
 
 			// add the result back to stack
 			stack.add(toStack);
@@ -80,9 +59,7 @@ public class Main {
 		// stack should have only 1 value,now
 		// casting down is just for submit solution purposes
 		int toReturn = stack.removeLast().intValue();
-
 		return toReturn;
-
 	}
 	/**
 	 * Decides whether the input string is numeric or not
@@ -95,14 +72,11 @@ public class Main {
 	}
 
 	public static void main(String args[]) throws FileNotFoundException {
-
-		Scanner textScan = new Scanner(new FileReader("prefixExpressions.txt"));
+		Scanner textScan = new Scanner(new FileReader("src/PrefixExpressions/input.txt"));
 
 		while (textScan.hasNextLine()) {
 			String[] prefix = textScan.nextLine().split(" ");
-
 			System.out.println(Main.evalautePrefix(prefix));
 		}
 	}
-
 }
