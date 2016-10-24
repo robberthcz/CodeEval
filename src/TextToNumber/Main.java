@@ -1,25 +1,45 @@
+/**
+ Text to Number
+ Challenge Description:
+ You have a sting which contains a number represented as English text. Your task is to translate these numbers into their integer representation. The numbers can range from negative 999,999,999 to positive 999,999,999. The following is an exhaustive list of English words that your program must account for:
+ negative,
+ zero, one, two, three, four, five, six, seven, eight, nine,
+ ten, eleven, twelve, thirteen, fourteen, fifteen, sixteen, seventeen, eighteen, nineteen,
+ twenty, thirty, forty, fifty, sixty, seventy, eighty, ninety,
+ hundred,
+ thousand,
+ million
+
+ Input sample:
+ Your program should accept as its first argument a path to a filename. Input example is the following
+ fifteen
+ negative six hundred thirty eight
+ zero
+ two million one hundred seven
+
+ - Negative numbers will be preceded by the word negative.
+ - The word "hundred" is not used when "thousand" could be. E.g. 1500 is written "one thousand five hundred", not "fifteen hundred".
+
+ Output sample:
+ Print results in the following way.
+ 15
+ -638
+ 0
+ 2000107
+ */
 package TextToNumber;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.HashMap;
 import java.util.Scanner;
-/**
- * Transforms number represented by text into number represented by digits-----
- * one hundred thousand twenty four => 100024
- * 
- * @author Robb
- *
- *
- */
+
 public class Main {
 	// maps text representation of numbers to digit representation
 	private HashMap<String, Integer> map;
 
 	public Main() {
-
 		map = new HashMap<String, Integer>();
-
 		map.put("zero", 0);
 		map.put("one", 1);
 		map.put("two", 2);
@@ -75,7 +95,6 @@ public class Main {
 		// each hundred can be preceded by tens and singles
 		// so temp variable first picks up singles, then tens and then hundreds
 		for (int i = start; i < numbers.length; i++) {
-
 			if (numbers[i].equals("million") || numbers[i].equals("thousand")) {
 				toReturn += temp * map.get(numbers[i]);
 				// we are done with building up the number by hundreds, tens and
@@ -87,8 +106,7 @@ public class Main {
 			if (numbers[i].equals("hundred"))
 				temp *= 100;
 			// build up the number by tens or singles
-			else
-				temp += map.get(numbers[i]);
+			else temp += map.get(numbers[i]);
 		}
 		// temp now contains what is left after subtracting millions and
 		// thousands
@@ -98,18 +116,12 @@ public class Main {
 	}
 
 	public static void main(String args[]) throws FileNotFoundException {
-
-		Scanner textScan = new Scanner(new FileReader("textToNumber.txt"));
-
+		Scanner textScan = new Scanner(new FileReader("src/TextToNumber/input.txt"));
 		Main test = new Main();
 
 		while (textScan.hasNextLine()) {
-
 			String[] numbers = textScan.nextLine().trim().split(" ");
-
 			System.out.println(test.textToNumber(numbers));
 		}
-
 	}
-
 }
