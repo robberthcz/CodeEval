@@ -1,3 +1,71 @@
+/**
+ THE CUBES
+ CHALLENGE DESCRIPTION:
+ You are given a scheme of the labyrinth in the form of a cube with N levels of N Ã— N elements. The walls are marked with asterisks â€˜*â€™, and the floor â€” with spaces. The floor of different levels, except the lowest one, can have holes marked with â€˜oâ€™. The holes allow you to move to a lower level (if it is on the floor of the current level), to move to a higher level (if it is on the floor of the higher level), or to move over the hole on the current level.
+ Below is the example of a labyrinth scheme for N=5:
+
+ Level 1:
+ *****
+ *   *
+ * ***
+ *   *
+ ** **
+
+ Level 2:
+ *****
+ *  o*
+ *o* *
+ * * *
+ *****
+
+ Level 3:
+ *****
+ *   *
+ * * *
+ *o* *
+ *****
+
+ Level 4:
+ *****
+ * o *
+ *** *
+ *   *
+ *****
+
+ Level 5:
+ ** **
+ *o  *
+ ***o*
+ *o  *
+ *****
+ Find the number of steps in the shortest way from the entrance on the first floor to the exit on the last floor, including entrance and exit. Moving between levels is one step.
+
+ INPUT SAMPLE:
+ The first argument is a file that contains test cases, one test case per line. Each test case contains N number (the length of the cube edge) and scheme of the labyrinth, separated by semicolon. The scheme of the labyrinth is serialized: all elements are listed sequentially, starting from the top left corner of the first level.
+ For example (the first test case represent the example provided above in challenge description):
+ 5;******   ** ****   *** ********  o**o* ** * ************   ** * **o*
+ ************ o **** **   ******** ***o  ****o**o  ******
+ 5;****** * ** * **   *** ********o*o** *o**   ************   **o* ** *o
+ ************   **** **   ******** *** o ****o**  o******
+ 7;********     ** *** ** * * ** * * **     **** *********** *   ** ***
+ **   *o**o***o**oo   ****************  oo ** * * ** * * ** * * ** *o o
+ ****************     ** * ****o* * ** *** **o    ****************     **
+ *** **     ****** ** o  o**************** *oo ** *** **o  * ** *** **o
+ *********** ****   * ** * * ** * *o** ***o**     ********
+
+ OUTPUT SAMPLE:
+ Print to stdout the minimum number of steps for each test case to get through the labyrinth. If it is impossible to pass the labyrinth â€” print 0.
+ For example:
+ 15
+ 0
+ 39
+
+ CONSTRAINTS:
+ Number of test cases is 20.
+ The length of the cube edge is from 5 to 11.
+ Moving between levels is 1 step.
+ There can more than one shortest way.
+ */
 package TheCubes;
 
 import java.io.FileNotFoundException;
@@ -5,66 +73,7 @@ import java.io.FileReader;
 import java.util.LinkedList;
 import java.util.Scanner;
 
-/**
- * Challenge Description:
- * 
- * You are given a scheme of the labyrinth in the form of a cube with N levels
- * of N × N elements. The walls are marked with asterisks ‘*’, and the floor —
- * with spaces. The floor of different levels, except the lowest one, can have
- * holes marked with ‘o’. The holes allow you to move to a lower level (if it is
- * on the floor of the current level), to move to a higher level (if it is on
- * the floor of the higher level), or to move over the hole on the current
- * level.
- * 
- * 
- * Find the number of steps in the shortest way from the entrance on the first
- * floor to the exit on the last floor, including entrance and exit. Moving
- * between levels is one step.
- * 
- * Input sample:
- * 
- * The first argument is a file that contains test cases, one test case per
- * line. Each test case contains N number (the length of the cube edge) and
- * scheme of the labyrinth, separated by semicolon. The scheme of the labyrinth
- * is serialized: all elements are listed sequentially, starting from the top
- * left corner of the first level.
- * 
- * For example (the first test case represent the example provided above in
- * challenge description):
- * 
- * 5;****** ** **** *** ******** o**o* ** * ************ ** * **o* o **** **
- * ******** ***o ****o**o ******
- * 
- * 5;****** * ** * ** *** ********o*o** *o** ************ **o* ** *o **** **
- * ******** *** o ****o** o******
- * 
- * 7;******** ** *** ** * * ** * * ** **** *********** * ** *** *o**o***o**oo
- * **************** oo ** * * ** * * ** * * ** *o o ** * ****o* * ** *** **o
- * **************** ** ** ****** ** o o**************** *oo ** *** **o * ** ***
- * **o **** * ** * * ** * *o** ***o** ********
- * 
- * Output sample:
- * 
- * Print to stdout the minimum number of steps for each test case to get through
- * the labyrinth. If it is impossible to pass the labyrinth — print 0.
- * 
- * For example:
- * 
- * 15
- * 
- * 0
- * 
- * 39
- * 
- * Constraints: 1.Number of test cases is 20. 2.The length of the cube edge is
- * from 5 to 11. 3.Moving between levels is 1 step. 4.There can more than one
- * shortest way.
- * 
- * @author Robb
- *
- */
 public class Main {
-
 	private boolean[][][] cubes;
 	private boolean[][][] changeLevel;
 	private byte[][] adj;
@@ -107,39 +116,25 @@ public class Main {
 			} else if (cubes[i][0][N - 1]) {
 				startRow = i;
 				startCol = 0;
-
 			} else if (cubes[i][N - 1][N - 1]) {
 				startRow = i;
 				startCol = N - 1;
-
 			}
-
 		}
-
 		queue.add(new Cell(startRow, startCol, N - 1, 1));
-
 		System.out.println(bfs(queue));
-
 	}
 
 	private int bfs(LinkedList<Cell> queue) {
-
 		while (queue.size() > 0 && !isExit(queue.peekFirst())) {
-
 			Cell next = queue.removeFirst();
 			queue.addAll(next.adj());
-
 		}
-
-		if (queue.size() == 0)
-			return 0;
-		else
-			return queue.peekFirst().distTo;
-
+		if (queue.size() == 0)	return 0;
+		else          			return queue.peekFirst().distTo;
 	}
 
 	private boolean isExit(Cell cell) {
-
 		return cell.row == exitRow && cell.col == exitCol && cell.level == 0;
 	}
 
@@ -168,27 +163,21 @@ public class Main {
 				marked[row][col][level + 1] = true;
 			}
 			for (byte[] rowcol : adj) {
-
 				byte i = rowcol[0], j = rowcol[1];
-
 				if (!isValid(i, j))
 					continue;
-
 				Cell cell = new Cell(row + i, col + j, level, distTo + 1);
 				cell.previous = this;
 
 				adjCells.add(cell);
 
 				marked[row + i][col + j][level] = true;
-
 			}
 			return adjCells;
-
 		}
 		/**
 		 * Returns true if the cell with a offset of (i,j) with regard to this
 		 * cell is valid and we have not been there
-		 * 
 		 * @param i
 		 *            row offset
 		 * @param j
@@ -196,32 +185,21 @@ public class Main {
 		 * @return
 		 */
 		private boolean isValid(int i, int j) {
-			if (row + i < 0 || col + j < 0 || row + i >= N || col + j >= N)
-				return false;
-
-			if (marked[row + i][col + j][level]
-					|| !cubes[row + i][col + j][level])
-				return false;
-
+			if ((row + i < 0 || col + j < 0 || row + i >= N || col + j >= N)||
+			   (marked[row + i][col + j][level]	|| !cubes[row + i][col + j][level]))	return false;
 			return true;
-
 		}
-
 	}
 
 	public static void main(String args[]) throws FileNotFoundException {
-
-		Scanner textScan = new Scanner(new FileReader("theCubes.txt"));
+		Scanner textScan = new Scanner(new FileReader("src/TheCubes/input.txt"));
 
 		while (textScan.hasNextLine()) {
-
 			String line[] = textScan.nextLine().split(";");
-
 			int N = Integer.parseInt(line[0]);
 
 			boolean[][][] cubes = new boolean[N][N][N];
 			boolean[][][] changeLevel = new boolean[N][N][N];
-
 			int id = 0;
 
 			for (int d = 0; d < N; d++) {
@@ -235,15 +213,11 @@ public class Main {
 						}
 						id++;
 						// System.out.print(id+" ");
-
 					}
 				}
 			}
 
 			Main test = new Main(N, cubes, changeLevel);
-
 		}
-
 	}
-
 }
