@@ -40,113 +40,84 @@ import java.math.BigInteger;
 import java.util.*;
 
 public class Main {
-    private String pattern, text;      // the pattern  // needed only for Las Vegas
-    private int k, blockSize, numOfBlocks;
-    private long[] patHash, textHash;
-    private int m;           // pattern length
-    private long q;          // a large prime, small enough to avoid long overflow
-    private int R;           // radix
-    private long RM;         // R^(M-1) % Q
+    private String pattern, text;
+    private int k;
 
-    public Main(String pattern, int k, String text) {
+    public Main(String pattern, int k, String text){
         this.pattern = pattern;
         this.text = text;
         this.k = k;
-        R = 256;
-        m = pattern.length();
-        q = longRandomPrime();
+        String S = "GATTACA";
+        String T = "GCATGCU";
 
-        this.blockSize = (k == 0) ? m : Math.max(m / (2 * k), 1);
-        this.numOfBlocks = m / blockSize;
+        int[][] score = NW( S, T);
+        printArray(score);
+        System.out.println();
+        score = NW(S, T.substring(1) + 'C');
+        printArray(score);
+        //String match = reconstruct(score, S, T, score.length - 1, score[0].length - 1,"");
+        //System.out.println(match);
+        //System.out.println(getMismatches(S, match));
+    }
 
-        // precompute R^(m-1) % q for use in removing leading digit
-        RM = 1;
-        for (int i = 1; i <= blockSize-1; i++)
-            RM = (R * RM) % q;
-
-        this.patHash = new long[numOfBlocks];
-        this.textHash = new long[numOfBlocks];
-
-        for(int i = 0; i < numOfBlocks; i++){
-            int blockEnd = (i == numOfBlocks - 1) ? m : (i + 1) * blockSize;
-            patHash[i] = hash(pattern.substring(i * blockSize, blockEnd));
-            textHash[i] = hash(text.substring(i * blockSize, blockEnd));
+    private void printArray(int[][] a){
+        for (int[] row : a)
+        {
+            System.out.println(Arrays.toString(row));
         }
     }
 
+    private int[][] NW(String S, String T){
+        int[][] score = new int[S.length() + 1][T.length() + 1];
 
-    private long hash(String key) {
-        long h = 0;
-        for (int j = 0; j < key.length(); j++)
-            h = (R * h + key.charAt(j)) % q;
-        return h;
-    }
-
-    private int getHashMismatches(){
-        int mismatches = 0;
-        for(int i = 0; i < textHash.length; i++){
-            if(textHash[i] != patHash[i])
-                mismatches++;
+        for(int i = 1; i < score.length; i++){
+            score[i][0] = i * (-1);
         }
-        return mismatches;
-    }
 
-    private int getMismatches(String textSubstr){
-        int mismatches = 0;
-        for(int i = 0; i < pattern.length(); i++){
-            if(textSubstr.charAt(i) != pattern.charAt(i))
-                mismatches++;
+        for(int i = 1; i < score[0].length; i++){
+            score[0][i] = i * (-1);
         }
-        return mismatches;
-    }
 
-    public List<String> search() {
-        int n = text.length();
-        LinkedList<String> list = new LinkedList<String>();
-
-        // check for match at offset 0
-        if (getHashMismatches() <= k && getMismatches(text.substring(0, m)) <= k)
-            list.add(text.substring(0, m));
-
-        // check for hash match; if hash match, check for exact match
-        for (int i = m; i < n; i++) {
-
-            for(int j = 0; j < textHash.length; j++){
-                int nextChar = (j == textHash.length - 1) ? i : (i-m + (j+1)*blockSize);
-                // Remove leading digit, add trailing digit, check for match.
-                textHash[j] = (textHash[j] + q - RM*text.charAt(i-m + j*blockSize) % q) % q;
-                textHash[j] = (textHash[j]*R + text.charAt(nextChar)) % q;
+        for(int i = 1 ; i < score.length; i++){
+            for(int j = 1; j < score[0].length; j++){
+                int match = (S.charAt(i - 1) == T.charAt(j - 1)) ? 1 : -1;
+                score[i][j] = Math.max(score[i-1][j-1] + match, Math.max(score[i-1][j] - 1, score[i][j-1] - 1));
+                //System.out.println("i: " + i + ", j: " + j + ", score: " + score[i][j]);
             }
-
-            if (getHashMismatches() <= k && getMismatches(text.substring(i - m + 1, i + 1)) <= k)
-                list.add(text.substring(i - m + 1, i + 1));
         }
 
-        Collections.sort(list, new MISMATCH_CMP());
-        return list;
+        return score;
     }
 
-    private static long longRandomPrime() {
-        BigInteger prime = BigInteger.probablePrime(31, new Random());
-        return prime.longValue();
+    private String reconstruct(int[][] score, String S, String T, int row, int col, String tmp){
+        if(row == 0 && col == 0) return tmp;
+        int match = (S.charAt(row - 1) == T.charAt(col - 1)) ? 1 : -1;
+
+        if      (score[row - 1][col - 1] + match == score[row][col]) return reconstruct(score, S, T, row-1, col-1, T.charAt(col - 1) + tmp);
+        else if (score[row - 1][col] - 1 == score[row][col])         return reconstruct(score, S, T, row-1, col, '-' + tmp);
+        else                                                         return reconstruct(score, S, T, row, col-1, '+' + tmp);
     }
 
-    public final class MISMATCH_CMP implements Comparator<String>{
-        public int compare(String S, String T){
-            int kS = getMismatches(S);
-            int kT = getMismatches(T);
+    private int getMismatches(String S, String temp){
+        int mismatches = 0;
+        int j = 0;
+        for(int i = 0; i < temp.length(); i++){
+            if(S.charAt(j) == temp.charAt(i))
+                mismatches++;
 
-            if(kS != kT) return Integer.compare(kS, kT);
-            else return S.compareTo(T);
+            if(temp.charAt(i) != '+')
+                j++;
         }
+        return mismatches;
     }
-
 
 
     public static void main(String[] args) throws FileNotFoundException {
         Scanner textScan = new Scanner(new FileReader("src/playWithDNA/input_large.txt"));
 
-        while(textScan.hasNextLine()){
+        Main test = new Main("", 0,"");
+
+        /*while(textScan.hasNextLine()){
             String line[] = textScan.nextLine().trim().split(" ");
 
             String pattern = line[0];
@@ -156,10 +127,10 @@ public class Main {
             Main test = new Main(pattern, k, text);
 
             String res = test.search().toString();
-            res = res.substring(1, res.length() - 1);
+            res = res.substring(1, res.length() - 1).replaceAll(",", "");
             if(res.equals(""))
                 res = "No match";
             System.out.println(res);
-        }
+        }*/
     }
 }
