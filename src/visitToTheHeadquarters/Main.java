@@ -155,7 +155,7 @@ public class Main {
     }
 
     public static void main(String[] args) throws FileNotFoundException, ParseException {
-        Scanner textScan = new Scanner(new FileReader("src/visitToTheHeadquarters/input_large.txt"));
+        Scanner textScan = new Scanner(new FileReader("src/visitToTheHeadquarters/input_test6.txt"));
         ArrayList<Agent> agents = new ArrayList<Agent>();
         HashMap<Integer, Boolean> isRoomFree = new HashMap<Integer, Boolean>();
 
