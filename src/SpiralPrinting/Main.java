@@ -1,32 +1,26 @@
+/**
+ CHALLENGE DESCRIPTION:
+ Write a program to print a 2D array (n x m) in spiral order (clockwise)
+
+ INPUT SAMPLE:
+ Your program should accept as its first argument a path to a filename. The input file contains several lines. Each line is one test case. Each line contains three items (semicolon delimited). The first is 'n'(rows), the second is 'm'(columns) and the third is a single space separated list of characters/numbers in row major order. E.g.
+ 3;3;1 2 3 4 5 6 7 8 9
+
+ OUTPUT SAMPLE:
+ Print out the matrix in clockwise fashion, one per line, space delimited. E.g.
+ 1 2 3 6 9 8 7 4 5
+ */
 package SpiralPrinting;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.Scanner;
 
-/**
- * Write a program to print a 2D array (n x m) in spiral order (clockwise)
- * 
- * Input sample:
- * 
- * Your program should accept as its first argument a path to a filename. The
- * input file contains several lines. Each line is one test case. Each line
- * contains three items (semicolon delimited). The first is 'n'(rows), the
- * second is 'm'(columns) and the third is a single space separated list of
- * characters/numbers in row major order. E.g. 3;3;1 2 3 4 5 6 7 8 9
- * 
- * Output sample:
- * 
- * Print out the matrix in clockwise fashion, one per line, space delimited.
- * E.g. 1 2 3 6 9 8 7 4 5
- * 
- * @author Robb
- *
- */
 public class Main {
 	private int nCols;
 	private String[][] matrix;
-	/**
+
+    /**
 	 * 
 	 * @param nCols
 	 *            matrix has this number of columns
@@ -54,7 +48,6 @@ public class Main {
 	 * @param toPrint
 	 */
 	public void printSpiralOrder(String[][] toPrint) {
-
 		int startRow = 0, startCol = 0, endRow = toPrint.length - 1, endCol = nCols - 1;
 
 		// total number of rows and columns
@@ -105,7 +98,6 @@ public class Main {
 			endCol--;
 			startRow++;
 			endRow--;
-
 		}
 
 		// print the result
@@ -135,20 +127,16 @@ public class Main {
 	}
 
 	public static void main(String args[]) throws FileNotFoundException {
-
-		Scanner textScan = new Scanner(new FileReader("spiralPrinting.txt"));
+		Scanner textScan = new Scanner(new FileReader("src/SpiralPrinting/input.txt"));
 
 		while (textScan.hasNextLine()) {
 			String words[] = textScan.nextLine().split(";");
-
 			// m is the number of columns
 			int m = Integer.parseInt(words[1]);
 
 			String matrix[] = words[2].split(" ");
 
 			Main test = new Main(m, matrix);
-
 		}
 	}
-
 }
