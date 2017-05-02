@@ -45,13 +45,24 @@ public class Main {
         items = new ArrayList<Item>();
     }
 
-    public void solve(){
+    public void solveDfs(){
+        // counts the number of explored nodes
+        int count = 2;
+
         Collections.sort(items);
         LinkedList<Node> Q = new LinkedList<Node>();
+
         // include first item
-        if(items.get(0).w <= W) Q.add(new Node(0, items.get(0).val, items.get(0).w, 1 << (items.get(0).name - 1)));
+        Node inclFst = new Node(0, items.get(0).val, items.get(0).w, 1 << (items.get(0).name - 1));
+        inclFst.bound = getBound(inclFst);
+        if(items.get(0).w <= W)
+            Q.add(inclFst);
+
         // not include first item
-        Q.addLast(new Node(0, 0, 0, 0));
+        Node omitFst = new Node(0, 0, 0, 0);
+        omitFst.bound = getBound(omitFst);
+        Q.addLast(omitFst);
+
         int maxBest = 0;
         Node maxNode = null;
 
@@ -71,13 +82,33 @@ public class Main {
             // node which includes the current item
             Node inclCurItem = new Node(n.level + 1, n.val + curItem.val, n.w + curItem.w, n.packs | (1 << (curItem.name - 1)));
             // bounds according to fractional knapsack problem
-            double inclBound = getBound(inclCurItem);
+            //double inclBound = getBound(inclCurItem);
+            double inclBound = n.bound;
             double omitBound = getBound(omitCurItem);
             // bound solutions
-            if(omitBound > maxBest) Q.add(omitCurItem);
-            if(inclBound > maxBest && inclCurItem.w <= W) Q.addFirst(inclCurItem);
+            if(omitBound > maxBest){
+                count++;
+                omitCurItem.bound = omitBound;
+                Q.add(omitCurItem);
+            }
+            if(inclBound > maxBest && inclCurItem.w <= W){
+                count++;
+                inclCurItem.bound = inclBound;
+                Q.addFirst(inclCurItem);
+            }
         }
+        // STATS --------------------------------
+        int allNodes = 1;
+        for(int i = 0; i < items.size(); i++)
+            allNodes += Math.pow(2, i + 1);
+        System.out.println("-- Explored: " + count + ", from total of " + allNodes);
         //System.out.println(maxBest);
+        // --------------------------------------
+
+        printCodeeval(maxNode);
+    }
+
+    public void printCodeeval(Node maxNode) {
         if(maxNode == null){
             System.out.println("-");
             return;
@@ -93,7 +124,6 @@ public class Main {
         }
         System.out.println();
     }
-
     /**
      *
      * @param n
@@ -125,20 +155,25 @@ public class Main {
             double thisRatio = (double) val / w;
             double thatRatio = (double) that.val / that.w;
             // Items with bigger Value/Weight ratio to left
-            return Double.compare(thisRatio, thatRatio)* (-1);
+            return Double.compare(thisRatio, thatRatio)*(-1);
         }
     }
 
-    class Node{
+    class Node implements Comparable<Node>{
         int level, val;
         double w;
         // if bit at i-th position is 1, then i-th item was included on the path when reaching this node
         int packs;
+        double bound;
         public Node(int level, int val, double w, int packs) {
             this.level = level;
             this.val = val;
             this.w = w;
             this.packs = packs;
+        }
+
+        public int compareTo(Node that){
+            return Double.compare(bound, that.bound);
         }
         @Override
         public String toString() {
@@ -166,7 +201,7 @@ public class Main {
                 String[] tmp = p.trim().split(",");
                 test.addItem(Integer.parseInt(tmp[0]), Double.parseDouble(tmp[1]), Integer.parseInt(tmp[2]));
             }
-            test.solve();
+            test.solveDfs();
         }
     }
 }

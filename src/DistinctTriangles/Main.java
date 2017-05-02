@@ -31,6 +31,7 @@ import java.io.FileReader;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Scanner;
+import java.util.TreeSet;
 
 public class Main {
 	private HashMap<Integer, LinkedList<Integer>> adj;
@@ -52,10 +53,9 @@ public class Main {
 
 	public int findTriangles() {
 		int triangles = 0;
-		boolean[] marked = new boolean[V];
-
-		for (int i : adj.keySet())
-			triangles += dfs(i, marked);
+        TreeSet<Integer> sortedSet = new TreeSet<Integer>(adj.keySet());
+        for (int i : sortedSet)
+			triangles += dfs(i);
 
 		/*
 		 * rather than using another boolean array to keep track of marked
@@ -70,29 +70,21 @@ public class Main {
 	 * returns 2x the number of distinct triangles, since without no secondary
 	 * marking that saves the crucial memory, we always explore the triangle
 	 * from both directions. Triangle TUV, we go T -> U -> V and T -> V -> U -> T
-	 * 
-	 * @param v
-	 *            vertex contained in the returned number of triangles
-	 * @param marked
+	 *
 	 * @return
 	 */
-	private int dfs(int v, boolean[] marked) {
+	private int dfs(int v) {
 		int count = 0;
-		// vertex v is marked, since any triangles containing this vertex will
-		// be found in this round of DFS
-		marked[v] = true;
 		// v is the 1st point of the triangle
-		for (int w : adj.get(v)){
+		for (int w : adj.get(v)) {
 			// 1st level of DFS, 2nd point of the triangle is w
-			if (!marked[w]) {
-				for (int z : adj.get(w)) {
+			if (w > v){
+				for (int z : adj.get(w)){
 					// 2nd level of DFS, 3rd point of the triangle is z
 					// if z==v then we closed the triangle, we returned back
 					// where we started from
-					if (!marked[z]) {
-						for (int y : adj.get(z)) {
-							if (y == v)	count++;
-						}
+					if (z > v && adj.get(z).contains(v)) {
+                            count++;
 					}
 				}
 			}
