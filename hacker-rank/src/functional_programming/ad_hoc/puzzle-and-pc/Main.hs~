@@ -1,0 +1,33 @@
+module Main where
+
+import Control.Applicative
+import System.Environment (getArgs)
+import Data.List
+
+main = do
+    conts <- getContents
+    putStrLn conts
+
+
+    
+    
+type Pos = (Int, Int)
+type Board = (Pos, Pos)
+type Trom = (Pos, Pos, Pos)
+
+
+divideBoard :: Board -> (Board, Board, Board, Board)
+divideBoard b =
+  where
+
+
+
+
+
+shiftPos :: Pos -> Pos -> Pos
+shiftPos from by = (fst from + fst by, snd from + snd by)
+
+shiftBoard :: Board -> Pos -> Board
+shiftBoard (down, up) pos = (shiftPos down pos, shiftPos up pos)
+
+
