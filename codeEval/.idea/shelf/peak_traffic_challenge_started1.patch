@@ -1,0 +1,32 @@
+Index: src/PeakTraffic/input.txt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/PeakTraffic/input.txt	(revision bba7385845721b9edb3aa2f2c1d3ffd38de82216)
++++ src/PeakTraffic/input.txt	(revision )
+@@ -1,0 +1,0 @@
+Index: src/PeakTraffic/Main.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/PeakTraffic/Main.java	(revision bba7385845721b9edb3aa2f2c1d3ffd38de82216)
++++ src/PeakTraffic/Main.java	(revision )
+@@ -1,0 +1,0 @@
+Index: src/PeakTraffic/output_large_correct.txt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/PeakTraffic/output_large_correct.txt	(revision bba7385845721b9edb3aa2f2c1d3ffd38de82216)
++++ src/PeakTraffic/output_large_correct.txt	(revision )
+@@ -1,0 +1,0 @@
+Index: src/PeakTraffic/input_large.txt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/PeakTraffic/input_large.txt	(revision bba7385845721b9edb3aa2f2c1d3ffd38de82216)
++++ src/PeakTraffic/input_large.txt	(revision )
+@@ -1,0 +1,0 @@

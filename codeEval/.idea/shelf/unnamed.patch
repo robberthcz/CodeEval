@@ -1,0 +1,52 @@
+Index: src/lakesNotCakes/Main.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/lakesNotCakes/Main.java	(date 1470681799000)
++++ src/lakesNotCakes/Main.java	(revision )
+@@ -38,8 +38,11 @@
+ */
+ package lakesNotCakes;
+ 
++import java.io.BufferedReader;
+ import java.io.FileNotFoundException;
+ import java.io.FileReader;
++import java.io.IOException;
++import java.util.ArrayList;
+ import java.util.LinkedList;
+ import java.util.Scanner;
+ 
+@@ -115,8 +118,8 @@
+ 
+     }
+ 
+-    public static void main(String[] args) throws FileNotFoundException {
+-        Scanner textScan = new Scanner(new FileReader(
++    public static void main(String[] args) throws IOException {
++        /*Scanner textScan = new Scanner(new FileReader(
+                 "test-cases/lakesNotCakes.txt"));
+ 
+         while (textScan.hasNextLine()) {
+@@ -133,6 +136,21 @@
+ 
+             }
+             Main test = new Main(lakes);
++        }*/
++        BufferedReader br = new BufferedReader(new FileReader("test-cases/lakesNotCakes.txt"));
++        int val = br.read();
++
++
++        while(val != -1){
++            val = br.read();
++            System.out.println(val);
+         }
++
++
++
++
++
++
++
+     }
+ }

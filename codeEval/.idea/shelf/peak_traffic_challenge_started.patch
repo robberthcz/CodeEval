@@ -1,0 +1,87 @@
+Index: src/PeakTraffic/Main.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/PeakTraffic/Main.java	(revision 23cf54f826d33ea768f1b72d7fe13baa82f67354)
++++ src/PeakTraffic/Main.java	(revision )
+@@ -58,35 +58,72 @@
+     }
+ 
+     public LinkedList<LinkedList<Integer>> getClusters(){
++        // remove all vertices, which only have 1 neighbor
++        //adj.keySet().removeIf(k -> adj.get(k).size() <= 1);
++
++        HashMap<Integer, Integer> adjCount = new HashMap<>();
++        for(int i : adj.keySet()) adjCount.put(i, adj.get(i).size());
++
+         LinkedList<LinkedList<Integer>> acc = new LinkedList<>();
+-        BronKerbosch(acc, new LinkedList<Integer>(), new LinkedList<Integer>(adj.keySet()), new LinkedList<Integer>());
++        BronKerbosch(acc, new LinkedList<Integer>(), new LinkedList<Integer>(adj.keySet()), new LinkedList<Integer>()
++                , adjCount);
+         return acc;
+     }
+ 
+-    public void BronKerbosch(LinkedList<LinkedList<Integer>> acc, LinkedList<Integer> R, LinkedList<Integer> P, LinkedList<Integer> X) {
++    public void BronKerbosch(LinkedList<LinkedList<Integer>> acc, LinkedList<Integer> R, LinkedList<Integer> P,
++                             LinkedList<Integer> X, HashMap<Integer, Integer> adjCount) {
+         if (P.isEmpty() && X.isEmpty()) {
+             acc.add((LinkedList<Integer>) R.clone());
+             return;
+         }
+ 
++        int max = Integer.MIN_VALUE;
++        int maxV = 0;
++        for(int i : adjCount.keySet()){
++            if(adjCount.get(i) > max){
++                max = adjCount.get(i);
++                maxV = i;
++            }
++        }
++        //System.out.println(maxV + " " + max);
++
++        HashMap<Integer, Integer> interAdjCount = (HashMap<Integer, Integer>) adjCount.clone();
++        int count = 0;
+         while(P.size() > 0){
+             int v = P.removeFirst();
++
++            if(max != Integer.MIN_VALUE && adj.get(maxV).contains(v)){
++                ++count;
++
++                continue;
++            }
++
+             R.addLast(v);
+-            LinkedList<Integer> interP = getIntersection(P, v);
+-            LinkedList<Integer> interX = getIntersection(X, v);
++            LinkedList<Integer> interP = getIntersection(P, v, interAdjCount);
++            LinkedList<Integer> interX = getIntersection(X, v, interAdjCount);
+ 
+-            BronKerbosch(acc, R, interP, interX);
+ 
++
++            BronKerbosch(acc, R, interP, interX, interAdjCount);
++
+             X.addLast(v);
+             R.removeLast();
++
+         }
++        //if(count > 0) System.out.println("This call saved rec. calls: " + count);
+ 
+     }
+ 
+-    private LinkedList<Integer> getIntersection(LinkedList<Integer> list, int v) {
++    private LinkedList<Integer> getIntersection(LinkedList<Integer> list, int v, HashMap<Integer, Integer> adjCount) {
+         LinkedList<Integer> listInterV = new LinkedList<Integer>();
+         for (int i : list) {
+             if (adj.get(v).contains(i)) listInterV.addLast(i);
++            else{
++                adjCount.remove(i);
++                for(int j : adj.get(i)){
++                    if(adjCount.containsKey(j)) adjCount.put(j, adjCount.get(j) - 1);
++                }
++            }
+         }
+         return listInterV;
+     }
+\ No newline at end of file

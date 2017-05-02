@@ -1,0 +1,49 @@
+Index: src/TextDollar/Main.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/TextDollar/Main.java	(revision bba7385845721b9edb3aa2f2c1d3ffd38de82216)
++++ src/TextDollar/Main.java	(revision )
+@@ -62,18 +62,18 @@
+ 
+ 		if (N == 0)
+ 			return "";
+-		else if (N > 999_999) {
++		else if (N > 999999) {
+ 			// recursion in the form that - subtract million from the number N,
+ 			// and build up the string to be returned by appending "Million"
+ 			// divide then the number into two parts
+ 			// first part represents the part higher than million
+ 			// the second part represents the part of a number lower than the
+ 			// million
+-			return numberToText(N / 1_000_000) + "Million"
+-					+ numberToText(N - (N / 1_000_000) * 1_000_000);
++			return numberToText(N / 1000000) + "Million"
++					+ numberToText(N - (N / 1000000) * 1000000);
+ 		} else if (N > 999) {
+-			return numberToText(N / 1_000) + "Thousand"
+-					+ numberToText(N - (N / 1_000) * 1_000);
++			return numberToText(N / 1000) + "Thousand"
++					+ numberToText(N - (N / 1000) * 1000);
+ 		} else if (N > 99) {
+ 			return numberToText(N / 100) + "Hundred"
+ 					+ numberToText(N - (N / 100) * 100);
+Index: src/TextToNumber/Main.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/TextToNumber/Main.java	(revision bba7385845721b9edb3aa2f2c1d3ffd38de82216)
++++ src/TextToNumber/Main.java	(revision )
+@@ -48,8 +48,8 @@
+ 		map.put("seventy", 70);
+ 		map.put("eighty", 80);
+ 		map.put("ninety", 90);
+-		map.put("thousand", 1_000);
+-		map.put("million", 1_000_000);
++		map.put("thousand", 1000);
++		map.put("million", 1000000);
+ 	}
+ 	/**
+ 	 * 
